@@ -3,6 +3,12 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageVersion Include="Testcontainers.Redis" Version="4.16.0" />
+    <PackageVersion Include="StackExchange.Redis" Version="3.1.31" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.6.2" />
     <PackageVersion Include="Aspire.Hosting.Redis" Version="13.6.2" />
     <PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="13.6.2" />
