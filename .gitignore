@@ -1,0 +1,29 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+TestResults/
+*.trx
+appsettings.*.local.json
+
+# Node / portal
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Env and secrets
+.env
+.env.*
+*.pfx
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Load test output
+load-tests/results/
