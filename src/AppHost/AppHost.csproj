@@ -1,0 +1,14 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.2">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.SqlServer" />
+    <PackageReference Include="Aspire.Hosting.Redis" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <ProjectReference Include="..\FleetApi\FleetApi.csproj" />
+    <ProjectReference Include="..\Gateway\Gateway.csproj" />
+  </ItemGroup>
+</Project>
