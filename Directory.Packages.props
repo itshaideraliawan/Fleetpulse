@@ -2,7 +2,4 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-  <ItemGroup>
-    <!-- Add package versions here in D1-02. Only permissively licensed packages. -->
-  </ItemGroup>
 </Project>
