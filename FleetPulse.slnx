@@ -7,4 +7,8 @@
     <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
     <Project Path="src/Simulator/Simulator.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FleetPulse.UnitTests/FleetPulse.UnitTests.csproj" />
+    <Project Path="tests/FleetPulse.IntegrationTests/FleetPulse.IntegrationTests.csproj" />
+  </Folder>
 </Solution>
