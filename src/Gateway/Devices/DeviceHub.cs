@@ -1,9 +1,14 @@
+using System.Text.Json;
+using FleetPulse.Contracts.DeviceProtocol;
 using FleetPulse.Contracts.Ids;
 using Microsoft.AspNetCore.SignalR;
 
 namespace FleetPulse.Gateway.Devices;
 
-public sealed partial class DeviceHub(IDevicePresence presence, ILogger<DeviceHub> logger) : Hub
+public sealed partial class DeviceHub(
+    IDevicePresence presence,
+    DeviceMessageBuffer buffer,
+    ILogger<DeviceHub> logger) : Hub
 {
     public const string Route = "/hubs/device";
 
@@ -32,6 +37,64 @@ public sealed partial class DeviceHub(IDevicePresence presence, ILogger<DeviceHu
         }
 
         await base.OnDisconnectedAsync(exception);
+    }
+
+    public void SendHeartbeat(JsonElement payload)
+    {
+        if (!TryGetDeviceId(out var deviceId))
+        {
+            DeviceMessageMetrics.RecordDropped("heartbeat", "not_connected");
+            return;
+        }
+
+        if (!DeviceMessageValidator.TryValidate<Heartbeat>(payload, deviceId, out var message, out var reason))
+        {
+            DeviceMessageMetrics.RecordDropped("heartbeat", reason!);
+            return;
+        }
+
+        if (!buffer.TryWrite(message!))
+        {
+            DeviceMessageMetrics.RecordDropped("heartbeat", "queue_full");
+            return;
+        }
+
+        DeviceMessageMetrics.RecordAccepted("heartbeat");
+    }
+
+    public void SendTelemetry(JsonElement payload)
+    {
+        if (!TryGetDeviceId(out var deviceId))
+        {
+            DeviceMessageMetrics.RecordDropped("telemetry", "not_connected");
+            return;
+        }
+
+        if (!DeviceMessageValidator.TryValidate<Telemetry>(payload, deviceId, out var message, out var reason))
+        {
+            DeviceMessageMetrics.RecordDropped("telemetry", reason!);
+            return;
+        }
+
+        if (!buffer.TryWrite(message!))
+        {
+            DeviceMessageMetrics.RecordDropped("telemetry", "queue_full");
+            return;
+        }
+
+        DeviceMessageMetrics.RecordAccepted("telemetry");
+    }
+
+    private bool TryGetDeviceId(out DeviceId deviceId)
+    {
+        if (Context.Items.TryGetValue(typeof(DeviceId), out var value) && value is DeviceId connectedId)
+        {
+            deviceId = connectedId;
+            return true;
+        }
+
+        deviceId = default;
+        return false;
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Device connected {DeviceId} {ConnectionId}")]
