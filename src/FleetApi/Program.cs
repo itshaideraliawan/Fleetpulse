@@ -14,6 +14,9 @@ var redisConnectionString = builder.Configuration.GetConnectionString("redis")
     ?? throw new InvalidOperationException("The Redis connection string is required.");
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
 builder.Services.AddSingleton<RedisFleetState>();
+builder.Services.AddScoped<DeviceQueries>();
+builder.Services.AddProblemDetails();
+builder.Services.AddOpenApi();
 builder.Services.AddHostedService<OfflineDetectionWorker>();
 builder.UseWolverine(FleetMessaging.Configure);
 
@@ -24,5 +27,8 @@ await using (var scope = app.Services.CreateAsyncScope())
     await db.Database.MigrateAsync(app.Lifetime.ApplicationStopping);
     await FleetSeed.SeedAsync(db, app.Lifetime.ApplicationStopping);
 }
+app.UseExceptionHandler();
 app.MapDefaultEndpoints();
+app.MapOpenApi();
+app.MapDeviceEndpoints();
 app.Run();
