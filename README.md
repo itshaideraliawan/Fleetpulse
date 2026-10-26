@@ -31,15 +31,22 @@ outbox) and Redis. See [`docs/architecture.md`](docs/architecture.md) and the de
 
 ## Results (measured locally)
 
-Machine: _CPU, RAM, OS_ · Devices: 5,000 across _N_ simulator processes
+Machine: Intel Core i5-10210U (4 cores / 8 threads), 15.8 GiB RAM, Windows 11 Pro.
+Capacity spike (2026-10-26): 5,000 devices in one simulator process; also checked as two processes of 2,500.
 
 | Target | Value | Result |
 | --- | --- | --- |
-| Concurrent devices | 5,000 for 15 minutes, no unexpected disconnects | _pending_ |
+| Concurrent devices | 5,000 for 15 minutes, no unexpected disconnects | Reached 5,000/5,000 by ~25 s; stayed full through a 5m 14s run with 0 reported failures. 15-minute target pending |
 | Dashboard freshness | status change visible within 2 s | _pending_ |
 | Command fan-out | 99% of 5,000 acknowledged within 10 s | _pending_ |
 | Reconnect storm | 5,000 back online within 60 s (with vs. without admission control) | _pending_ |
 | Rollout safety | bad release halted at wave 2, 100% rolled back | _pending_ |
+
+In the D2-05 capacity spike, one simulator process reached 1,000, 2,500, and 5,000 connected devices with
+heartbeats and telemetry continuing at each level. Its working set was about 114 MiB, 201 MiB, and 324 MiB,
+respectively. Two 2,500-device processes also reached 5,000 combined connections with 0 reported failures;
+their working sets were about 197 MiB and 190 MiB. Gateway `/health` returned 200 at 5,000 connections.
+The configured fleet stops at 5,000, so this establishes a lower bound for machine capacity, not a failure limit.
 
 ## Run it locally
 
