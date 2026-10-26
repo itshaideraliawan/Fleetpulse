@@ -20,6 +20,8 @@
     <PackageVersion Include="WolverineFx" Version="6.52.0" />
     <PackageVersion Include="WolverineFx.RabbitMQ" Version="6.52.0" />
     <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.52.0" />
+    <PackageVersion Include="WolverineFx.SqlServer" Version="6.52.0" />
+    <PackageVersion Include="WolverineFx.EntityFrameworkCore" Version="6.52.0" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.6.2" />
     <PackageVersion Include="Aspire.Hosting.Redis" Version="13.6.2" />
     <PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="13.6.2" />
