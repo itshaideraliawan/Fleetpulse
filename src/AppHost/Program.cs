@@ -15,10 +15,15 @@ builder.AddProject<Projects.FleetApi>("fleet-api")
     .WaitFor(redis)
     .WaitFor(rabbitMq);
 
-builder.AddProject<Projects.Gateway>("gateway")
+var gateway = builder.AddProject<Projects.Gateway>("gateway")
+    .WithHttpEndpoint()
     .WithReference(redis)
     .WithReference(rabbitMq)
     .WaitFor(redis)
     .WaitFor(rabbitMq);
+
+builder.AddProject<Projects.Simulator>("simulator")
+    .WithEnvironment("GATEWAY_URL", gateway.GetEndpoint("http"))
+    .WaitFor(gateway);
 
 builder.Build().Run();
