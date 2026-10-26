@@ -9,6 +9,8 @@ public sealed class RedisFleetState(IConnectionMultiplexer redis, IClock clock)
 {
     public const string CountsKey = "fleet:counts";
     public const string ExpirationsKey = "fleet:device-expirations";
+    public const string StatusChangesKey = "fleet:status:changes";
+    public const string MessageCountKey = "fleet:status:message-count";
     public static readonly TimeSpan OfflineAfter = TimeSpan.FromSeconds(45);
     public const int ExpirationBatchSize = 500;
 
@@ -47,6 +49,8 @@ public sealed class RedisFleetState(IConnectionMultiplexer redis, IClock clock)
                 'temperatureCelsius', ARGV[8])
         end
         redis.call('ZADD', expirations, tonumber(ARGV[4]) + 45000, ARGV[1])
+        redis.call('SADD', KEYS[4], ARGV[1])
+        redis.call('INCR', KEYS[5])
         return 1
         """;
 
@@ -60,6 +64,7 @@ public sealed class RedisFleetState(IConnectionMultiplexer redis, IClock clock)
                 redis.call('HINCRBY', KEYS[2], 'online', -1)
                 local health = redis.call('HGET', state, 'health')
                 redis.call('HINCRBY', KEYS[2], health, -1)
+                redis.call('SADD', KEYS[3], device)
             end
         end
         return #devices
@@ -75,7 +80,7 @@ public sealed class RedisFleetState(IConnectionMultiplexer redis, IClock clock)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var result = await redis.GetDatabase().ScriptEvaluateAsync(ExpireScript,
-            [ExpirationsKey, CountsKey],
+            [ExpirationsKey, CountsKey, StatusChangesKey],
             [clock.UtcNow.ToUnixTimeMilliseconds(), ExpirationBatchSize]);
         return (int)result;
     }
@@ -88,7 +93,7 @@ public sealed class RedisFleetState(IConnectionMultiplexer redis, IClock clock)
         var now = clock.UtcNow.ToUnixTimeMilliseconds();
         var healthName = health.ToString().ToLowerInvariant();
         await redis.GetDatabase().ScriptEvaluateAsync(UpdateScript,
-            [DeviceKey(header.DeviceId), ExpirationsKey, CountsKey],
+            [DeviceKey(header.DeviceId), ExpirationsKey, CountsKey, StatusChangesKey, MessageCountKey],
             [deviceId, kind, header.SentAtUtc.ToUnixTimeMilliseconds(), now, healthName,
                 telemetry?.CpuPercent.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
                 telemetry?.MemoryPercent.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,

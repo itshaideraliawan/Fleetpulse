@@ -17,7 +17,11 @@ builder.Services.AddSingleton<RedisFleetState>();
 builder.Services.AddScoped<DeviceQueries>();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
+builder.Services.AddSignalR()
+    .AddStackExchangeRedis(redisConnectionString, options =>
+        options.Configuration.ChannelPrefix = RedisChannel.Literal("fleetpulse:operator"));
 builder.Services.AddHostedService<OfflineDetectionWorker>();
+builder.Services.AddHostedService<StatusBroadcaster>();
 builder.UseWolverine(FleetMessaging.Configure);
 
 var app = builder.Build();
@@ -31,4 +35,5 @@ app.UseExceptionHandler();
 app.MapDefaultEndpoints();
 app.MapOpenApi();
 app.MapDeviceEndpoints();
+app.MapHub<OperatorHub>(OperatorHub.Route);
 app.Run();
