@@ -10,5 +10,6 @@
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <ProjectReference Include="..\FleetApi\FleetApi.csproj" />
     <ProjectReference Include="..\Gateway\Gateway.csproj" />
+    <ProjectReference Include="..\Simulator\Simulator.csproj" />
   </ItemGroup>
 </Project>

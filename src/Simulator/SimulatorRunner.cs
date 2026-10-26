@@ -1,0 +1,130 @@
+using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR.Client;
+
+namespace FleetPulse.Simulator;
+
+public sealed class SimulatorRunner(SimulatorOptions options)
+{
+    private long _connected;
+    private long _heartbeats;
+    private long _telemetry;
+    private long _failedConnections;
+
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        Console.WriteLine($"Starting {options.Devices} devices at sequence {options.Start}; Gateway={options.Gateway}");
+        var devices = Enumerable.Range(options.Start, options.Devices)
+            .Select(sequence => RunDeviceAsync(VirtualDevice.Create(sequence), cancellationToken))
+            .ToArray();
+
+        var reporter = ReportAsync(cancellationToken);
+        await Task.WhenAll(devices);
+        await reporter;
+    }
+
+    private async Task RunDeviceAsync(VirtualDevice device, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var startupSpread = Math.Min(20_000, options.Devices * 4);
+            await Task.Delay(Random.Shared.Next(startupSpread), cancellationToken);
+            var failureCount = 0;
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var hubUrl = new Uri($"{options.Gateway.GetLeftPart(UriPartial.Authority)}/hubs/device?deviceId={device.Id}");
+                await using var connection = new HubConnectionBuilder()
+                    .WithUrl(hubUrl, transport =>
+                    {
+                        transport.Transports = HttpTransportType.WebSockets;
+                        transport.SkipNegotiation = true;
+                    })
+                    .Build();
+
+                try
+                {
+                    await connection.StartAsync(cancellationToken);
+                    Interlocked.Increment(ref _connected);
+                    failureCount = 0;
+                    try
+                    {
+                        await SendLoopAsync(connection, device, cancellationToken);
+                    }
+                    finally
+                    {
+                        Interlocked.Decrement(ref _connected);
+                    }
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+                {
+                    Interlocked.Increment(ref _failedConnections);
+                    if (failureCount == 0 && device.Sequence % 100 == 1)
+                    {
+                        Console.Error.WriteLine($"DeviceId={device.Id} connection failed: {exception.Message}");
+                    }
+                }
+
+                failureCount++;
+                var delay = FullJitterBackoff.NextDelay(failureCount, Random.Shared.NextDouble());
+                await Task.Delay(delay, cancellationToken);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Ctrl+C ends each virtual device.
+        }
+    }
+
+    private async Task SendLoopAsync(HubConnection connection, VirtualDevice device, CancellationToken cancellationToken)
+    {
+        var nextHeartbeat = DateTimeOffset.MinValue;
+        var nextTelemetry = DateTimeOffset.MinValue;
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (connection.State != HubConnectionState.Connected)
+            {
+                return;
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            if (now >= nextHeartbeat)
+            {
+                await connection.SendCoreAsync("SendHeartbeat", [device.CreateHeartbeat(now)], cancellationToken);
+                Interlocked.Increment(ref _heartbeats);
+                nextHeartbeat = now.AddSeconds(15);
+            }
+
+            if (now >= nextTelemetry)
+            {
+                await connection.SendCoreAsync("SendTelemetry", [device.CreateTelemetry(now)], cancellationToken);
+                Interlocked.Increment(ref _telemetry);
+                nextTelemetry = now.AddSeconds(10);
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+        }
+    }
+
+    private async Task ReportAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                Console.WriteLine($"Connected={Interlocked.Read(ref _connected)}/{options.Devices} " +
+                    $"Heartbeats={Interlocked.Read(ref _heartbeats)} Telemetry={Interlocked.Read(ref _telemetry)} " +
+                    $"ConnectionFailures={Interlocked.Read(ref _failedConnections)}");
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The process is stopping.
+        }
+    }
+}
