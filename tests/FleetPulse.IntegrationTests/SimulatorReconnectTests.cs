@@ -48,6 +48,7 @@ public sealed class SimulatorReconnectTests
         builder.Services.AddSignalR();
         builder.Services.AddSingleton<IDevicePresence, InMemoryPresence>();
         builder.Services.AddSingleton<IDeviceCommandDelivery, NoCommands>();
+        builder.Services.AddSingleton<ICommandReportSink, NoReports>();
         builder.Services.AddSingleton<DeviceMessageBuffer>();
         var app = builder.Build();
         app.MapHub<DeviceHub>(DeviceHub.Route);
@@ -90,6 +91,15 @@ public sealed class SimulatorReconnectTests
             Task.CompletedTask;
 
         public Task DeliverPendingAsync(DeviceId deviceId, string connectionId,
+            CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    private sealed class NoReports : ICommandReportSink
+    {
+        public Task PublishAsync(CommandAcknowledged acknowledgement,
+            CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task PublishAsync(CommandCompleted result,
             CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

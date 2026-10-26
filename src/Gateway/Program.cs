@@ -10,6 +10,7 @@ builder.Services.AddOpenTelemetry().WithMetrics(metrics => metrics.AddMeter(Devi
 builder.UseWolverine(GatewayMessaging.Configure);
 builder.Services.AddSingleton<DeviceMessageBuffer>();
 builder.Services.AddSingleton<IDeviceBatchSink, WolverineBatchSink>();
+builder.Services.AddSingleton<ICommandReportSink, WolverineCommandReportSink>();
 builder.Services.AddHostedService<DeviceMessagePublisher>();
 var redisConnectionString = builder.Configuration.GetConnectionString("redis")
     ?? throw new InvalidOperationException("The Redis connection string is required.");

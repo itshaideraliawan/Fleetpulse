@@ -9,6 +9,8 @@ public static class GatewayMessaging
     public const string HeartbeatQueue = "fleetpulse.device-heartbeats";
     public const string TelemetryQueue = "fleetpulse.device-telemetry";
     public const string CommandQueue = "fleetpulse.deliver-command";
+    public const string CommandAckQueue = "fleetpulse.command-acknowledged";
+    public const string CommandResultQueue = "fleetpulse.command-completed";
 
     public static void Configure(WolverineOptions options)
     {
@@ -22,6 +24,8 @@ public static class GatewayMessaging
             .AutoProvision();
         options.PublishMessage<DeviceHeartbeatBatch>().ToRabbitQueue(HeartbeatQueue).SendInline();
         options.PublishMessage<DeviceTelemetryBatch>().ToRabbitQueue(TelemetryQueue).SendInline();
+        options.PublishMessage<CommandAcknowledged>().ToRabbitQueue(CommandAckQueue).SendInline();
+        options.PublishMessage<CommandCompleted>().ToRabbitQueue(CommandResultQueue).SendInline();
         options.ListenToRabbitQueue(CommandQueue).ProcessInline();
     }
 }

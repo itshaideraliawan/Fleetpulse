@@ -131,6 +131,7 @@ public sealed class GatewayCommandDeliveryTests
         builder.Services.AddSingleton<IDevicePresence, RedisDevicePresence>();
         builder.Services.AddSingleton<PendingDeviceCommands>();
         builder.Services.AddSingleton<IDeviceCommandDelivery, GatewayCommandDelivery>();
+        builder.Services.AddSingleton<ICommandReportSink, NoReports>();
         builder.Services.AddSingleton<DeviceMessageBuffer>();
         builder.Services.AddSignalR()
             .AddStackExchangeRedis(redisConnection, options =>
@@ -167,5 +168,14 @@ public sealed class GatewayCommandDeliveryTests
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
         return port;
+    }
+
+    private sealed class NoReports : ICommandReportSink
+    {
+        public Task PublishAsync(CommandAcknowledged acknowledgement,
+            CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task PublishAsync(CommandCompleted result,
+            CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }
