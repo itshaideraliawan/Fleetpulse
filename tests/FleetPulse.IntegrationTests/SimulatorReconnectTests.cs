@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using FleetPulse.Contracts.Ids;
+using FleetPulse.Contracts.Messaging;
 using FleetPulse.Gateway.Devices;
 using FleetPulse.Simulator;
 using Microsoft.AspNetCore.Builder;
@@ -46,6 +47,7 @@ public sealed class SimulatorReconnectTests
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
         builder.Services.AddSignalR();
         builder.Services.AddSingleton<IDevicePresence, InMemoryPresence>();
+        builder.Services.AddSingleton<IDeviceCommandDelivery, NoCommands>();
         builder.Services.AddSingleton<DeviceMessageBuffer>();
         var app = builder.Build();
         app.MapHub<DeviceHub>(DeviceHub.Route);
@@ -80,5 +82,14 @@ public sealed class SimulatorReconnectTests
 
         public Task<string?> GetConnectionIdAsync(DeviceId deviceId, CancellationToken cancellationToken) =>
             Task.FromResult<string?>(null);
+    }
+
+    private sealed class NoCommands : IDeviceCommandDelivery
+    {
+        public Task DeliverAsync(DeliverCommand delivery, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task DeliverPendingAsync(DeviceId deviceId, string connectionId,
+            CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

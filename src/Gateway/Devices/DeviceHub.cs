@@ -7,6 +7,7 @@ namespace FleetPulse.Gateway.Devices;
 
 public sealed partial class DeviceHub(
     IDevicePresence presence,
+    IDeviceCommandDelivery commandDelivery,
     DeviceMessageBuffer buffer,
     ILogger<DeviceHub> logger) : Hub
 {
@@ -24,6 +25,8 @@ public sealed partial class DeviceHub(
         var deviceId = DeviceId.From(guid);
         await presence.ConnectAsync(deviceId, Context.ConnectionId, Context.ConnectionAborted);
         Context.Items[typeof(DeviceId)] = deviceId;
+        await commandDelivery.DeliverPendingAsync(deviceId, Context.ConnectionId,
+            Context.ConnectionAborted);
         LogConnected(logger, deviceId, Context.ConnectionId);
         await base.OnConnectedAsync();
     }
