@@ -1,5 +1,4 @@
 using FleetPulse.Contracts.Messaging;
-using JasperFx.CodeGeneration;
 using Wolverine;
 using Wolverine.RabbitMQ;
 
@@ -9,11 +8,11 @@ public static class GatewayMessaging
 {
     public const string HeartbeatQueue = "fleetpulse.device-heartbeats";
     public const string TelemetryQueue = "fleetpulse.device-telemetry";
+    public const string CommandQueue = "fleetpulse.deliver-command";
 
     public static void Configure(WolverineOptions options)
     {
-        // The Gateway only publishes; no generated Wolverine handlers are needed here.
-        options.CodeGeneration.TypeLoadMode = TypeLoadMode.Static;
+        options.Discovery.IncludeAssembly(typeof(CommandDeliveryHandler).Assembly);
         options.UseRabbitMqUsingNamedConnection("rabbitmq")
             .ConfigureChannelCreation(channel =>
             {
@@ -23,5 +22,6 @@ public static class GatewayMessaging
             .AutoProvision();
         options.PublishMessage<DeviceHeartbeatBatch>().ToRabbitQueue(HeartbeatQueue).SendInline();
         options.PublishMessage<DeviceTelemetryBatch>().ToRabbitQueue(TelemetryQueue).SendInline();
+        options.ListenToRabbitQueue(CommandQueue).ProcessInline();
     }
 }
