@@ -1,3 +1,4 @@
+using FleetPulse.Contracts.DeviceProtocol;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -9,6 +10,9 @@ public sealed class SimulatorRunner(SimulatorOptions options)
     private long _heartbeats;
     private long _telemetry;
     private long _failedConnections;
+    private long _commandsExecuted;
+    private long _commandsReplayed;
+    private long _commandsFailed;
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
@@ -24,6 +28,7 @@ public sealed class SimulatorRunner(SimulatorOptions options)
 
     private async Task RunDeviceAsync(VirtualDevice device, CancellationToken cancellationToken)
     {
+        var executor = new DeviceCommandExecutor(device, options.CommandFailureRate);
         try
         {
             var startupSpread = Math.Min(20_000, options.Devices * 4);
@@ -40,6 +45,8 @@ public sealed class SimulatorRunner(SimulatorOptions options)
                         transport.SkipNegotiation = true;
                     })
                     .Build();
+                connection.On<DeviceCommand>("ReceiveCommand", command =>
+                    HandleCommandAsync(connection, device, executor, command, cancellationToken));
 
                 try
                 {
@@ -76,6 +83,49 @@ public sealed class SimulatorRunner(SimulatorOptions options)
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             // Ctrl+C ends each virtual device.
+        }
+    }
+
+    private async Task HandleCommandAsync(HubConnection connection, VirtualDevice device,
+        DeviceCommandExecutor executor, DeviceCommand command, CancellationToken cancellationToken)
+    {
+        if (command.Header.DeviceId != device.Id ||
+            command.Header.ProtocolVersion != DeviceProtocolVersion.Current ||
+            command.ExpiresAtUtc <= DateTimeOffset.UtcNow)
+        {
+            return;
+        }
+
+        try
+        {
+            var ack = new CommandAck(
+                new DeviceMessageHeader(DeviceProtocolVersion.Current, device.Id, DateTimeOffset.UtcNow),
+                command.CommandId);
+            await connection.SendCoreAsync("SendCommandAck", [ack], cancellationToken);
+            var execution = await executor.ExecuteAsync(command, cancellationToken);
+            if (execution.Replayed)
+            {
+                Interlocked.Increment(ref _commandsReplayed);
+            }
+            else
+            {
+                Interlocked.Increment(ref _commandsExecuted);
+                if (execution.Result.Outcome == CommandOutcome.Failed)
+                {
+                    Interlocked.Increment(ref _commandsFailed);
+                }
+            }
+
+            await connection.SendCoreAsync("SendCommandResult", [execution.Result], cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The simulator is stopping.
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            Console.Error.WriteLine($"DeviceId={device.Id} CommandId={command.CommandId} " +
+                $"report failed: {exception.Message}");
         }
     }
 
@@ -119,7 +169,10 @@ public sealed class SimulatorRunner(SimulatorOptions options)
             {
                 Console.WriteLine($"Connected={Interlocked.Read(ref _connected)}/{options.Devices} " +
                     $"Heartbeats={Interlocked.Read(ref _heartbeats)} Telemetry={Interlocked.Read(ref _telemetry)} " +
-                    $"ConnectionFailures={Interlocked.Read(ref _failedConnections)}");
+                    $"ConnectionFailures={Interlocked.Read(ref _failedConnections)} " +
+                    $"CommandsExecuted={Interlocked.Read(ref _commandsExecuted)} " +
+                    $"CommandsReplayed={Interlocked.Read(ref _commandsReplayed)} " +
+                    $"CommandsFailed={Interlocked.Read(ref _commandsFailed)}");
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

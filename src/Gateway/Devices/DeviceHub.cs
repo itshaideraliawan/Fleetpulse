@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FleetPulse.Contracts.DeviceProtocol;
 using FleetPulse.Contracts.Ids;
+using FleetPulse.Contracts.Messaging;
 using Microsoft.AspNetCore.SignalR;
 
 namespace FleetPulse.Gateway.Devices;
@@ -8,6 +9,7 @@ namespace FleetPulse.Gateway.Devices;
 public sealed partial class DeviceHub(
     IDevicePresence presence,
     IDeviceCommandDelivery commandDelivery,
+    ICommandReportSink commandReports,
     DeviceMessageBuffer buffer,
     ILogger<DeviceHub> logger) : Hub
 {
@@ -86,6 +88,44 @@ public sealed partial class DeviceHub(
         }
 
         DeviceMessageMetrics.RecordAccepted("telemetry");
+    }
+
+    public async Task SendCommandAck(JsonElement payload)
+    {
+        if (!TryGetDeviceId(out var deviceId))
+        {
+            DeviceMessageMetrics.RecordDropped("command_ack", "not_connected");
+            return;
+        }
+
+        if (!DeviceMessageValidator.TryValidate<CommandAck>(payload, deviceId,
+                out var message, out var reason) || message!.CommandId.Value == Guid.Empty)
+        {
+            DeviceMessageMetrics.RecordDropped("command_ack", reason ?? "command_id");
+            return;
+        }
+
+        await commandReports.PublishAsync(new CommandAcknowledged(message), Context.ConnectionAborted);
+        DeviceMessageMetrics.RecordAccepted("command_ack");
+    }
+
+    public async Task SendCommandResult(JsonElement payload)
+    {
+        if (!TryGetDeviceId(out var deviceId))
+        {
+            DeviceMessageMetrics.RecordDropped("command_result", "not_connected");
+            return;
+        }
+
+        if (!DeviceMessageValidator.TryValidate<CommandResult>(payload, deviceId,
+                out var message, out var reason) || message!.CommandId.Value == Guid.Empty)
+        {
+            DeviceMessageMetrics.RecordDropped("command_result", reason ?? "command_id");
+            return;
+        }
+
+        await commandReports.PublishAsync(new CommandCompleted(message), Context.ConnectionAborted);
+        DeviceMessageMetrics.RecordAccepted("command_result");
     }
 
     private bool TryGetDeviceId(out DeviceId deviceId)

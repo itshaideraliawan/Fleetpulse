@@ -1,8 +1,10 @@
+using System.Globalization;
+
 namespace FleetPulse.Simulator;
 
-public sealed record SimulatorOptions(Uri Gateway, int Devices, int Start)
+public sealed record SimulatorOptions(Uri Gateway, int Devices, int Start, double CommandFailureRate = 0)
 {
-    public const string Usage = "Usage: dotnet run --project src/Simulator -- --gateway http://localhost:<gateway-port> [--devices 1000] [--start 1]";
+    public const string Usage = "Usage: dotnet run --project src/Simulator -- --gateway http://localhost:<gateway-port> [--devices 1000] [--start 1] [--command-failure-rate 0.05]";
 
     public static bool TryParse(string[] args, string? gatewayEnvironment,
         out SimulatorOptions? options, out string? error)
@@ -12,6 +14,7 @@ public sealed record SimulatorOptions(Uri Gateway, int Devices, int Start)
         var gatewayText = gatewayEnvironment;
         var devices = 1000;
         var start = 1;
+        var commandFailureRate = 0.0;
 
         for (var index = 0; index < args.Length; index += 2)
         {
@@ -32,6 +35,10 @@ public sealed record SimulatorOptions(Uri Gateway, int Devices, int Start)
                 case "--start" when int.TryParse(args[index + 1], out var first):
                     start = first;
                     break;
+                case "--command-failure-rate" when double.TryParse(args[index + 1],
+                    NumberStyles.Float, CultureInfo.InvariantCulture, out var rate):
+                    commandFailureRate = rate;
+                    break;
                 default:
                     error = $"Invalid option or value: {args[index]}.";
                     return false;
@@ -51,7 +58,13 @@ public sealed record SimulatorOptions(Uri Gateway, int Devices, int Start)
             return false;
         }
 
-        options = new SimulatorOptions(gateway, devices, start);
+        if (!double.IsFinite(commandFailureRate) || commandFailureRate is < 0 or > 1)
+        {
+            error = "Command failure rate must be between 0 and 1.";
+            return false;
+        }
+
+        options = new SimulatorOptions(gateway, devices, start, commandFailureRate);
         return true;
     }
 }
