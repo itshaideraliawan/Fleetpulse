@@ -2,6 +2,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" PrivateAssets="all" />
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="WolverineFx" />
