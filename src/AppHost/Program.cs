@@ -22,8 +22,22 @@ var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WaitFor(redis)
     .WaitFor(rabbitMq);
 
-builder.AddProject<Projects.Simulator>("simulator")
-    .WithEnvironment("GATEWAY_URL", gateway.GetEndpoint("http"))
-    .WaitFor(gateway);
+var simulatorDevicesValue = builder.Configuration["Simulator:Devices"];
+var simulatorDevices = simulatorDevicesValue is null ? 1000
+    : int.TryParse(simulatorDevicesValue, out var configuredDevices) ? configuredDevices
+    : throw new ArgumentException("Simulator:Devices must be a number from 0 to 5000.");
+
+if (simulatorDevices is < 0 or > 5000)
+{
+    throw new ArgumentException("Simulator:Devices must be 0 to disable the Simulator or 1 to 5000 devices.");
+}
+
+if (simulatorDevices > 0)
+{
+    builder.AddProject<Projects.Simulator>("simulator")
+        .WithEnvironment("GATEWAY_URL", gateway.GetEndpoint("http"))
+        .WithArgs("--devices", simulatorDevices.ToString(System.Globalization.CultureInfo.InvariantCulture))
+        .WaitFor(gateway);
+}
 
 builder.Build().Run();
