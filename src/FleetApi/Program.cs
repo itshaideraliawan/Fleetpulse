@@ -1,3 +1,4 @@
+using FleetPulse.FleetApi.Commands;
 using FleetPulse.Contracts.Time;
 using FleetPulse.FleetApi.Devices;
 using FleetPulse.ServiceDefaults;
@@ -7,14 +8,17 @@ using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
+var sqlConnectionString = builder.Configuration.GetConnectionString("fleetdb")
+    ?? throw new InvalidOperationException("The fleet database connection string is required.");
 builder.Services.AddDbContext<FleetDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("fleetdb")));
+    options.UseSqlServer(sqlConnectionString));
 builder.Services.AddSingleton<IClock, SystemClock>();
 var redisConnectionString = builder.Configuration.GetConnectionString("redis")
     ?? throw new InvalidOperationException("The Redis connection string is required.");
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
 builder.Services.AddSingleton<RedisFleetState>();
 builder.Services.AddScoped<DeviceQueries>();
+builder.Services.AddScoped<CommandPublisher>();
 builder.Services.AddProblemDetails();
 builder.Services.AddFleetOpenApi();
 builder.Services.AddSignalR()
@@ -22,7 +26,11 @@ builder.Services.AddSignalR()
         options.Configuration.ChannelPrefix = RedisChannel.Literal("fleetpulse:operator"));
 builder.Services.AddHostedService<OfflineDetectionWorker>();
 builder.Services.AddHostedService<StatusBroadcaster>();
-builder.UseWolverine(FleetMessaging.Configure);
+builder.UseWolverine(options =>
+{
+    FleetMessaging.Configure(options);
+    FleetMessaging.ConfigureOutbox(options, sqlConnectionString);
+});
 
 var app = builder.Build();
 await using (var scope = app.Services.CreateAsyncScope())
@@ -35,5 +43,6 @@ app.UseExceptionHandler();
 app.MapDefaultEndpoints();
 app.MapOpenApi();
 app.MapDeviceEndpoints();
+app.MapCommandEndpoints();
 app.MapHub<OperatorHub>(OperatorHub.Route);
 app.Run();

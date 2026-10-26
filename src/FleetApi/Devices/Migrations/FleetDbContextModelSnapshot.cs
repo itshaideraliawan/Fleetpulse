@@ -22,6 +22,53 @@ namespace FleetApi.Devices.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("FleetPulse.FleetApi.Commands.Command", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.ToTable("Commands");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Commands.CommandTarget", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CommandGroupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId");
+
+                    b.HasIndex("CommandGroupId", "Status");
+
+                    b.ToTable("CommandTargets");
+                });
+
             modelBuilder.Entity("FleetPulse.FleetApi.Devices.Device", b =>
                 {
                     b.Property<Guid>("Id")
@@ -90,6 +137,23 @@ namespace FleetApi.Devices.Migrations
                     b.ToTable("Sites");
                 });
 
+            modelBuilder.Entity("FleetPulse.FleetApi.Commands.CommandTarget", b =>
+                {
+                    b.HasOne("FleetPulse.FleetApi.Commands.Command", "Command")
+                        .WithMany("Targets")
+                        .HasForeignKey("CommandGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FleetPulse.FleetApi.Devices.Device", null)
+                        .WithMany()
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Command");
+                });
+
             modelBuilder.Entity("FleetPulse.FleetApi.Devices.Device", b =>
                 {
                     b.HasOne("FleetPulse.FleetApi.Devices.Site", "Site")
@@ -110,6 +174,11 @@ namespace FleetApi.Devices.Migrations
                         .IsRequired();
 
                     b.Navigation("Region");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Commands.Command", b =>
+                {
+                    b.Navigation("Targets");
                 });
 
             modelBuilder.Entity("FleetPulse.FleetApi.Devices.Region", b =>
