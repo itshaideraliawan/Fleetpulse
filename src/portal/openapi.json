@@ -1,0 +1,567 @@
+﻿{
+    "openapi":  "3.1.1",
+    "info":  {
+                 "title":  "Fleet API",
+                 "version":  "1.0.0"
+             },
+    "paths":  {
+                  "/api/fleet/summary":  {
+                                             "get":  {
+                                                         "tags":  [
+                                                                      "Fleet"
+                                                                  ],
+                                                         "summary":  "Get fleet and regional connection and health counts",
+                                                         "operationId":  "GetFleetSummary",
+                                                         "responses":  {
+                                                                           "200":  {
+                                                                                       "description":  "OK",
+                                                                                       "content":  {
+                                                                                                       "application/json":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "$ref":  "#/components/schemas/FleetSummary"
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                   }
+                                                                                   }
+                                                                       }
+                                                     }
+                                         },
+                  "/api/devices":  {
+                                       "get":  {
+                                                   "tags":  [
+                                                                "Devices"
+                                                            ],
+                                                   "summary":  "Search and filter devices",
+                                                   "operationId":  "SearchDevices",
+                                                   "parameters":  [
+                                                                      {
+                                                                          "name":  "q",
+                                                                          "in":  "query",
+                                                                          "schema":  {
+                                                                                         "type":  "string"
+                                                                                     }
+                                                                      },
+                                                                      {
+                                                                          "name":  "regionId",
+                                                                          "in":  "query",
+                                                                          "schema":  {
+                                                                                         "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                         "type":  [
+                                                                                                      "integer",
+                                                                                                      "string"
+                                                                                                  ],
+                                                                                         "format":  "int32"
+                                                                                     }
+                                                                      },
+                                                                      {
+                                                                          "name":  "siteId",
+                                                                          "in":  "query",
+                                                                          "schema":  {
+                                                                                         "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                         "type":  [
+                                                                                                      "integer",
+                                                                                                      "string"
+                                                                                                  ],
+                                                                                         "format":  "int32"
+                                                                                     }
+                                                                      },
+                                                                      {
+                                                                          "name":  "status",
+                                                                          "in":  "query",
+                                                                          "schema":  {
+                                                                                         "type":  "string"
+                                                                                     }
+                                                                      },
+                                                                      {
+                                                                          "name":  "health",
+                                                                          "in":  "query",
+                                                                          "schema":  {
+                                                                                         "type":  "string"
+                                                                                     }
+                                                                      },
+                                                                      {
+                                                                          "name":  "page",
+                                                                          "in":  "query",
+                                                                          "schema":  {
+                                                                                         "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                         "type":  [
+                                                                                                      "integer",
+                                                                                                      "string"
+                                                                                                  ],
+                                                                                         "format":  "int32"
+                                                                                     }
+                                                                      },
+                                                                      {
+                                                                          "name":  "pageSize",
+                                                                          "in":  "query",
+                                                                          "schema":  {
+                                                                                         "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                         "type":  [
+                                                                                                      "integer",
+                                                                                                      "string"
+                                                                                                  ],
+                                                                                         "format":  "int32"
+                                                                                     }
+                                                                      }
+                                                                  ],
+                                                   "responses":  {
+                                                                     "200":  {
+                                                                                 "description":  "OK",
+                                                                                 "content":  {
+                                                                                                 "application/json":  {
+                                                                                                                          "schema":  {
+                                                                                                                                         "$ref":  "#/components/schemas/DevicePage"
+                                                                                                                                     }
+                                                                                                                      }
+                                                                                             }
+                                                                             },
+                                                                     "400":  {
+                                                                                 "description":  "Bad Request",
+                                                                                 "content":  {
+                                                                                                 "application/problem+json":  {
+                                                                                                                                  "schema":  {
+                                                                                                                                                 "$ref":  "#/components/schemas/HttpValidationProblemDetails"
+                                                                                                                                             }
+                                                                                                                              }
+                                                                                             }
+                                                                             }
+                                                                 }
+                                               }
+                                   },
+                  "/api/devices/{id}":  {
+                                            "get":  {
+                                                        "tags":  [
+                                                                     "Devices"
+                                                                 ],
+                                                        "summary":  "Get a device and its latest telemetry",
+                                                        "operationId":  "GetDevice",
+                                                        "parameters":  [
+                                                                           {
+                                                                               "name":  "id",
+                                                                               "in":  "path",
+                                                                               "required":  true,
+                                                                               "schema":  {
+                                                                                              "type":  "string",
+                                                                                              "format":  "uuid"
+                                                                                          }
+                                                                           }
+                                                                       ],
+                                                        "responses":  {
+                                                                          "200":  {
+                                                                                      "description":  "OK",
+                                                                                      "content":  {
+                                                                                                      "application/json":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/DeviceDetail"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                  }
+                                                                                  },
+                                                                          "404":  {
+                                                                                      "description":  "Not Found",
+                                                                                      "content":  {
+                                                                                                      "application/problem+json":  {
+                                                                                                                                       "schema":  {
+                                                                                                                                                      "$ref":  "#/components/schemas/ProblemDetails"
+                                                                                                                                                  }
+                                                                                                                                   }
+                                                                                                  }
+                                                                                  }
+                                                                      }
+                                                    }
+                                        }
+              },
+    "components":  {
+                       "schemas":  {
+                                       "DeviceDetail":  {
+                                                            "required":  [
+                                                                             "device",
+                                                                             "cpuPercent",
+                                                                             "memoryPercent",
+                                                                             "temperatureCelsius"
+                                                                         ],
+                                                            "type":  "object",
+                                                            "properties":  {
+                                                                               "device":  {
+                                                                                              "$ref":  "#/components/schemas/DeviceListItem"
+                                                                                          },
+                                                                               "cpuPercent":  {
+                                                                                                  "pattern":  "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                                                                                  "type":  [
+                                                                                                               "null",
+                                                                                                               "number",
+                                                                                                               "string"
+                                                                                                           ],
+                                                                                                  "format":  "double"
+                                                                                              },
+                                                                               "memoryPercent":  {
+                                                                                                     "pattern":  "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                                                                                     "type":  [
+                                                                                                                  "null",
+                                                                                                                  "number",
+                                                                                                                  "string"
+                                                                                                              ],
+                                                                                                     "format":  "double"
+                                                                                                 },
+                                                                               "temperatureCelsius":  {
+                                                                                                          "pattern":  "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+                                                                                                          "type":  [
+                                                                                                                       "null",
+                                                                                                                       "number",
+                                                                                                                       "string"
+                                                                                                                   ],
+                                                                                                          "format":  "double"
+                                                                                                      }
+                                                                           }
+                                                        },
+                                       "DeviceId":  {
+                                                        "type":  "string",
+                                                        "format":  "uuid"
+                                                    },
+                                       "DeviceListItem":  {
+                                                              "required":  [
+                                                                               "id",
+                                                                               "serialNumber",
+                                                                               "model",
+                                                                               "firmwareVersion",
+                                                                               "siteId",
+                                                                               "siteName",
+                                                                               "regionId",
+                                                                               "regionName",
+                                                                               "online",
+                                                                               "health",
+                                                                               "lastSeenAt"
+                                                                           ],
+                                                              "type":  "object",
+                                                              "properties":  {
+                                                                                 "id":  {
+                                                                                            "$ref":  "#/components/schemas/DeviceId"
+                                                                                        },
+                                                                                 "serialNumber":  {
+                                                                                                      "type":  "string"
+                                                                                                  },
+                                                                                 "model":  {
+                                                                                               "type":  "string"
+                                                                                           },
+                                                                                 "firmwareVersion":  {
+                                                                                                         "type":  "string"
+                                                                                                     },
+                                                                                 "siteId":  {
+                                                                                                "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                "type":  [
+                                                                                                             "integer",
+                                                                                                             "string"
+                                                                                                         ],
+                                                                                                "format":  "int32"
+                                                                                            },
+                                                                                 "siteName":  {
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                                 "regionId":  {
+                                                                                                  "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                  "type":  [
+                                                                                                               "integer",
+                                                                                                               "string"
+                                                                                                           ],
+                                                                                                  "format":  "int32"
+                                                                                              },
+                                                                                 "regionName":  {
+                                                                                                    "type":  "string"
+                                                                                                },
+                                                                                 "online":  {
+                                                                                                "type":  "boolean"
+                                                                                            },
+                                                                                 "health":  {
+                                                                                                "type":  [
+                                                                                                             "null",
+                                                                                                             "string"
+                                                                                                         ]
+                                                                                            },
+                                                                                 "lastSeenAt":  {
+                                                                                                    "type":  [
+                                                                                                                 "null",
+                                                                                                                 "string"
+                                                                                                             ],
+                                                                                                    "format":  "date-time"
+                                                                                                }
+                                                                             }
+                                                          },
+                                       "DevicePage":  {
+                                                          "required":  [
+                                                                           "total",
+                                                                           "page",
+                                                                           "pageSize",
+                                                                           "items"
+                                                                       ],
+                                                          "type":  "object",
+                                                          "properties":  {
+                                                                             "total":  {
+                                                                                           "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                           "type":  [
+                                                                                                        "integer",
+                                                                                                        "string"
+                                                                                                    ],
+                                                                                           "format":  "int32"
+                                                                                       },
+                                                                             "page":  {
+                                                                                          "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                          "type":  [
+                                                                                                       "integer",
+                                                                                                       "string"
+                                                                                                   ],
+                                                                                          "format":  "int32"
+                                                                                      },
+                                                                             "pageSize":  {
+                                                                                              "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                              "type":  [
+                                                                                                           "integer",
+                                                                                                           "string"
+                                                                                                       ],
+                                                                                              "format":  "int32"
+                                                                                          },
+                                                                             "items":  {
+                                                                                           "type":  "array",
+                                                                                           "items":  {
+                                                                                                         "$ref":  "#/components/schemas/DeviceListItem"
+                                                                                                     }
+                                                                                       }
+                                                                         }
+                                                      },
+                                       "FleetSummary":  {
+                                                            "required":  [
+                                                                             "totalDevices",
+                                                                             "onlineDevices",
+                                                                             "offlineDevices",
+                                                                             "healthyDevices",
+                                                                             "degradedDevices",
+                                                                             "unhealthyDevices",
+                                                                             "regions"
+                                                                         ],
+                                                            "type":  "object",
+                                                            "properties":  {
+                                                                               "totalDevices":  {
+                                                                                                    "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                    "type":  [
+                                                                                                                 "integer",
+                                                                                                                 "string"
+                                                                                                             ],
+                                                                                                    "format":  "int32"
+                                                                                                },
+                                                                               "onlineDevices":  {
+                                                                                                     "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                     "type":  [
+                                                                                                                  "integer",
+                                                                                                                  "string"
+                                                                                                              ],
+                                                                                                     "format":  "int32"
+                                                                                                 },
+                                                                               "offlineDevices":  {
+                                                                                                      "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                      "type":  [
+                                                                                                                   "integer",
+                                                                                                                   "string"
+                                                                                                               ],
+                                                                                                      "format":  "int32"
+                                                                                                  },
+                                                                               "healthyDevices":  {
+                                                                                                      "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                      "type":  [
+                                                                                                                   "integer",
+                                                                                                                   "string"
+                                                                                                               ],
+                                                                                                      "format":  "int32"
+                                                                                                  },
+                                                                               "degradedDevices":  {
+                                                                                                       "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                       "type":  [
+                                                                                                                    "integer",
+                                                                                                                    "string"
+                                                                                                                ],
+                                                                                                       "format":  "int32"
+                                                                                                   },
+                                                                               "unhealthyDevices":  {
+                                                                                                        "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                        "type":  [
+                                                                                                                     "integer",
+                                                                                                                     "string"
+                                                                                                                 ],
+                                                                                                        "format":  "int32"
+                                                                                                    },
+                                                                               "regions":  {
+                                                                                               "type":  "array",
+                                                                                               "items":  {
+                                                                                                             "$ref":  "#/components/schemas/RegionSummary"
+                                                                                                         }
+                                                                                           }
+                                                                           }
+                                                        },
+                                       "HttpValidationProblemDetails":  {
+                                                                            "type":  "object",
+                                                                            "properties":  {
+                                                                                               "type":  {
+                                                                                                            "type":  [
+                                                                                                                         "null",
+                                                                                                                         "string"
+                                                                                                                     ]
+                                                                                                        },
+                                                                                               "title":  {
+                                                                                                             "type":  [
+                                                                                                                          "null",
+                                                                                                                          "string"
+                                                                                                                      ]
+                                                                                                         },
+                                                                                               "status":  {
+                                                                                                              "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                              "type":  [
+                                                                                                                           "null",
+                                                                                                                           "integer",
+                                                                                                                           "string"
+                                                                                                                       ],
+                                                                                                              "format":  "int32"
+                                                                                                          },
+                                                                                               "detail":  {
+                                                                                                              "type":  [
+                                                                                                                           "null",
+                                                                                                                           "string"
+                                                                                                                       ]
+                                                                                                          },
+                                                                                               "instance":  {
+                                                                                                                "type":  [
+                                                                                                                             "null",
+                                                                                                                             "string"
+                                                                                                                         ]
+                                                                                                            },
+                                                                                               "errors":  {
+                                                                                                              "type":  "object",
+                                                                                                              "additionalProperties":  {
+                                                                                                                                           "type":  "array",
+                                                                                                                                           "items":  {
+                                                                                                                                                         "type":  "string"
+                                                                                                                                                     }
+                                                                                                                                       }
+                                                                                                          }
+                                                                                           }
+                                                                        },
+                                       "ProblemDetails":  {
+                                                              "type":  "object",
+                                                              "properties":  {
+                                                                                 "type":  {
+                                                                                              "type":  [
+                                                                                                           "null",
+                                                                                                           "string"
+                                                                                                       ]
+                                                                                          },
+                                                                                 "title":  {
+                                                                                               "type":  [
+                                                                                                            "null",
+                                                                                                            "string"
+                                                                                                        ]
+                                                                                           },
+                                                                                 "status":  {
+                                                                                                "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                "type":  [
+                                                                                                             "null",
+                                                                                                             "integer",
+                                                                                                             "string"
+                                                                                                         ],
+                                                                                                "format":  "int32"
+                                                                                            },
+                                                                                 "detail":  {
+                                                                                                "type":  [
+                                                                                                             "null",
+                                                                                                             "string"
+                                                                                                         ]
+                                                                                            },
+                                                                                 "instance":  {
+                                                                                                  "type":  [
+                                                                                                               "null",
+                                                                                                               "string"
+                                                                                                           ]
+                                                                                              }
+                                                                             }
+                                                          },
+                                       "RegionSummary":  {
+                                                             "required":  [
+                                                                              "regionId",
+                                                                              "regionName",
+                                                                              "totalDevices",
+                                                                              "onlineDevices",
+                                                                              "offlineDevices",
+                                                                              "healthyDevices",
+                                                                              "degradedDevices",
+                                                                              "unhealthyDevices"
+                                                                          ],
+                                                             "type":  "object",
+                                                             "properties":  {
+                                                                                "regionId":  {
+                                                                                                 "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                 "type":  [
+                                                                                                              "integer",
+                                                                                                              "string"
+                                                                                                          ],
+                                                                                                 "format":  "int32"
+                                                                                             },
+                                                                                "regionName":  {
+                                                                                                   "type":  "string"
+                                                                                               },
+                                                                                "totalDevices":  {
+                                                                                                     "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                     "type":  [
+                                                                                                                  "integer",
+                                                                                                                  "string"
+                                                                                                              ],
+                                                                                                     "format":  "int32"
+                                                                                                 },
+                                                                                "onlineDevices":  {
+                                                                                                      "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                      "type":  [
+                                                                                                                   "integer",
+                                                                                                                   "string"
+                                                                                                               ],
+                                                                                                      "format":  "int32"
+                                                                                                  },
+                                                                                "offlineDevices":  {
+                                                                                                       "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                       "type":  [
+                                                                                                                    "integer",
+                                                                                                                    "string"
+                                                                                                                ],
+                                                                                                       "format":  "int32"
+                                                                                                   },
+                                                                                "healthyDevices":  {
+                                                                                                       "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                       "type":  [
+                                                                                                                    "integer",
+                                                                                                                    "string"
+                                                                                                                ],
+                                                                                                       "format":  "int32"
+                                                                                                   },
+                                                                                "degradedDevices":  {
+                                                                                                        "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                        "type":  [
+                                                                                                                     "integer",
+                                                                                                                     "string"
+                                                                                                                 ],
+                                                                                                        "format":  "int32"
+                                                                                                    },
+                                                                                "unhealthyDevices":  {
+                                                                                                         "pattern":  "^-?(?:0|[1-9]\\d*)$",
+                                                                                                         "type":  [
+                                                                                                                      "integer",
+                                                                                                                      "string"
+                                                                                                                  ],
+                                                                                                         "format":  "int32"
+                                                                                                     }
+                                                                            }
+                                                         }
+                                   }
+                   },
+    "tags":  [
+                 {
+                     "name":  "Fleet"
+                 },
+                 {
+                     "name":  "Devices"
+                 }
+             ]
+}

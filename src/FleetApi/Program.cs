@@ -16,7 +16,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer
 builder.Services.AddSingleton<RedisFleetState>();
 builder.Services.AddScoped<DeviceQueries>();
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
+builder.Services.AddFleetOpenApi();
 builder.Services.AddSignalR()
     .AddStackExchangeRedis(redisConnectionString, options =>
         options.Configuration.ChannelPrefix = RedisChannel.Literal("fleetpulse:operator"));
