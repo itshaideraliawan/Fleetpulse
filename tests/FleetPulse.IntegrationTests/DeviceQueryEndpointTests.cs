@@ -53,7 +53,7 @@ public sealed class DeviceQueryEndpointTests
         builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
         builder.Services.AddScoped<DeviceQueries>();
         builder.Services.AddProblemDetails();
-        builder.Services.AddOpenApi();
+        builder.Services.AddFleetOpenApi();
         await using var app = builder.Build();
         app.MapDeviceEndpoints();
         app.MapOpenApi();
@@ -113,6 +113,10 @@ public sealed class DeviceQueryEndpointTests
         Assert.True(paths.TryGetProperty("/api/fleet/summary", out _));
         Assert.True(paths.TryGetProperty("/api/devices", out _));
         Assert.True(paths.TryGetProperty("/api/devices/{id}", out _));
+        var deviceIdSchema = document.RootElement.GetProperty("components")
+            .GetProperty("schemas").GetProperty("DeviceId");
+        Assert.Equal("string", deviceIdSchema.GetProperty("type").GetString());
+        Assert.Equal("uuid", deviceIdSchema.GetProperty("format").GetString());
 
         await app.StopAsync(timeout.Token);
     }
