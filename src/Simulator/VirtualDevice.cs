@@ -3,9 +3,20 @@ using FleetPulse.Contracts.Ids;
 
 namespace FleetPulse.Simulator;
 
-public sealed record VirtualDevice(int Sequence, DeviceId Id, string Model, string FirmwareVersion, DeviceHealth Health)
+public sealed class VirtualDevice(int sequence, DeviceId id, string model, string firmwareVersion, DeviceHealth health)
 {
     private static readonly string[] Models = ["Kiosk-A", "Kiosk-B", "Kiosk-C"];
+    private string _firmwareVersion = firmwareVersion;
+
+    public int Sequence { get; } = sequence;
+    public DeviceId Id { get; } = id;
+    public string Model { get; } = model;
+    public DeviceHealth Health { get; } = health;
+    public string FirmwareVersion => Volatile.Read(ref _firmwareVersion);
+
+    internal void SetFirmwareVersion(string version) => Volatile.Write(ref _firmwareVersion, version);
+
+    public static bool IsKnownModel(string model) => Models.Contains(model, StringComparer.Ordinal);
 
     public static VirtualDevice Create(int sequence)
     {

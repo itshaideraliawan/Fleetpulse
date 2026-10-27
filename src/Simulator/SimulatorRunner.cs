@@ -13,6 +13,8 @@ public sealed class SimulatorRunner(SimulatorOptions options)
     private long _commandsExecuted;
     private long _commandsReplayed;
     private long _commandsFailed;
+    private long _firmwareInstalled;
+    private long _firmwareRolledBack;
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
@@ -28,7 +30,8 @@ public sealed class SimulatorRunner(SimulatorOptions options)
 
     private async Task RunDeviceAsync(VirtualDevice device, CancellationToken cancellationToken)
     {
-        var executor = new DeviceCommandExecutor(device, options.CommandFailureRate);
+        var executor = new DeviceCommandExecutor(device, options.CommandFailureRate,
+            options.BadReleaseVersion, options.BadReleaseModel);
         try
         {
             var startupSpread = Math.Min(20_000, options.Devices * 4);
@@ -114,6 +117,8 @@ public sealed class SimulatorRunner(SimulatorOptions options)
                 {
                     Interlocked.Increment(ref _commandsFailed);
                 }
+                else if (command.Kind == CommandKind.InstallFirmware) Interlocked.Increment(ref _firmwareInstalled);
+                else if (command.Kind == CommandKind.RollbackFirmware) Interlocked.Increment(ref _firmwareRolledBack);
             }
 
             await connection.SendCoreAsync("SendCommandResult", [execution.Result], cancellationToken);
@@ -124,7 +129,7 @@ public sealed class SimulatorRunner(SimulatorOptions options)
         }
         catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {
-            Console.Error.WriteLine($"DeviceId={device.Id} CommandId={command.CommandId} " +
+            Console.Error.WriteLine($"DeviceId={device.Id} CommandId={command.CommandId} RolloutId={command.RolloutId} " +
                 $"report failed: {exception.Message}");
         }
     }
@@ -172,7 +177,9 @@ public sealed class SimulatorRunner(SimulatorOptions options)
                     $"ConnectionFailures={Interlocked.Read(ref _failedConnections)} " +
                     $"CommandsExecuted={Interlocked.Read(ref _commandsExecuted)} " +
                     $"CommandsReplayed={Interlocked.Read(ref _commandsReplayed)} " +
-                    $"CommandsFailed={Interlocked.Read(ref _commandsFailed)}");
+                    $"CommandsFailed={Interlocked.Read(ref _commandsFailed)} " +
+                    $"FirmwareInstalled={Interlocked.Read(ref _firmwareInstalled)} " +
+                    $"FirmwareRolledBack={Interlocked.Read(ref _firmwareRolledBack)}");
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
