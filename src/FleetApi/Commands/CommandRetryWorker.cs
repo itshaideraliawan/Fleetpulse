@@ -74,10 +74,7 @@ public sealed partial class CommandRetryWorker(
                     continue;
                 }
 
-                var message = new DeviceCommand(
-                    new DeviceMessageHeader(DeviceProtocolVersion.Current, target.DeviceId, now),
-                    target.Id, target.Command.Kind, target.Command.ExpiresAtUtc,
-                    null, null, null, null);
+                var message = target.ToDeviceCommand(now);
                 await outbox.PublishAsync(new DeliverCommand(message));
             }
 

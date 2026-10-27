@@ -67,6 +67,16 @@ public sealed class FleetDbContext(DbContextOptions<FleetDbContext> options) : D
             entity.Property(target => target.Status).HasConversion<int>();
             entity.Property(target => target.ResultDetail).HasMaxLength(512);
             entity.Property(target => target.RowVersion).IsRowVersion();
+            entity.Property(target => target.ReleaseId)
+                .HasConversion(id => id.HasValue ? id.Value.Value : (Guid?)null,
+                    value => value.HasValue ? ReleaseId.From(value.Value) : null);
+            entity.Property(target => target.RolloutId)
+                .HasConversion(id => id.HasValue ? id.Value.Value : (Guid?)null,
+                    value => value.HasValue ? RolloutId.From(value.Value) : null);
+            entity.Property(target => target.WaveId)
+                .HasConversion(id => id.HasValue ? id.Value.Value : (Guid?)null,
+                    value => value.HasValue ? WaveId.From(value.Value) : null);
+            entity.Property(target => target.FirmwareVersion).HasMaxLength(40);
             entity.HasOne(target => target.Command).WithMany(command => command.Targets)
                 .HasForeignKey(target => target.CommandGroupId);
             entity.HasOne<Device>().WithMany().HasForeignKey(target => target.DeviceId)
