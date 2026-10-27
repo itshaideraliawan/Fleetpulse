@@ -1,4 +1,5 @@
 using FleetPulse.FleetApi.Commands;
+using FleetPulse.FleetApi.Rollouts;
 using FleetPulse.Contracts.Time;
 using FleetPulse.FleetApi.Devices;
 using FleetPulse.ServiceDefaults;
@@ -20,6 +21,7 @@ builder.Services.AddSingleton<RedisFleetState>();
 builder.Services.AddScoped<DeviceQueries>();
 builder.Services.AddScoped<CommandPublisher>();
 builder.Services.AddScoped<CommandQueries>();
+builder.Services.AddScoped<RolloutPlanner>();
 builder.Services.AddProblemDetails();
 builder.Services.AddFleetOpenApi();
 builder.Services.AddSignalR()

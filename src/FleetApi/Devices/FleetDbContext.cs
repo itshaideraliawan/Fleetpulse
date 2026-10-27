@@ -1,5 +1,6 @@
 using FleetPulse.Contracts.Ids;
 using FleetPulse.FleetApi.Commands;
+using FleetPulse.FleetApi.Rollouts;
 using Microsoft.EntityFrameworkCore;
 
 namespace FleetPulse.FleetApi.Devices;
@@ -11,9 +12,14 @@ public sealed class FleetDbContext(DbContextOptions<FleetDbContext> options) : D
     public DbSet<Device> Devices => Set<Device>();
     public DbSet<Command> Commands => Set<Command>();
     public DbSet<CommandTarget> CommandTargets => Set<CommandTarget>();
+    public DbSet<Release> Releases => Set<Release>();
+    public DbSet<Rollout> Rollouts => Set<Rollout>();
+    public DbSet<Wave> Waves => Set<Wave>();
+    public DbSet<WaveTarget> WaveTargets => Set<WaveTarget>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        RolloutModel.Configure(modelBuilder);
         modelBuilder.Entity<Region>(entity =>
         {
             entity.HasKey(region => region.Id);
