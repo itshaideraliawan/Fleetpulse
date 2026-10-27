@@ -161,6 +161,102 @@ namespace FleetApi.Devices.Migrations
                     b.ToTable("Sites");
                 });
 
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Release", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("FirmwareVersion")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FirmwareVersion")
+                        .IsUnique();
+
+                    b.ToTable("Releases");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Rollout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ReleaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StateReason")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("ReleaseId");
+
+                    b.ToTable("Rollouts");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Wave", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CumulativePercentage")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("RolloutId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RolloutId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("Waves");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.WaveTarget", b =>
+                {
+                    b.Property<Guid>("RolloutId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("OriginalFirmwareVersion")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<Guid>("WaveId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RolloutId", "DeviceId");
+
+                    b.HasIndex("DeviceId");
+
+                    b.HasIndex("RolloutId", "WaveId");
+
+                    b.ToTable("WaveTargets");
+                });
+
             modelBuilder.Entity("FleetPulse.FleetApi.Commands.CommandTarget", b =>
                 {
                     b.HasOne("FleetPulse.FleetApi.Commands.Command", "Command")
@@ -200,6 +296,46 @@ namespace FleetApi.Devices.Migrations
                     b.Navigation("Region");
                 });
 
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Rollout", b =>
+                {
+                    b.HasOne("FleetPulse.FleetApi.Rollouts.Release", "Release")
+                        .WithMany("Rollouts")
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Release");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Wave", b =>
+                {
+                    b.HasOne("FleetPulse.FleetApi.Rollouts.Rollout", "Rollout")
+                        .WithMany("Waves")
+                        .HasForeignKey("RolloutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Rollout");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.WaveTarget", b =>
+                {
+                    b.HasOne("FleetPulse.FleetApi.Devices.Device", null)
+                        .WithMany()
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FleetPulse.FleetApi.Rollouts.Wave", "Wave")
+                        .WithMany("Targets")
+                        .HasForeignKey("RolloutId", "WaveId")
+                        .HasPrincipalKey("RolloutId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Wave");
+                });
+
             modelBuilder.Entity("FleetPulse.FleetApi.Commands.Command", b =>
                 {
                     b.Navigation("Targets");
@@ -213,6 +349,21 @@ namespace FleetApi.Devices.Migrations
             modelBuilder.Entity("FleetPulse.FleetApi.Devices.Site", b =>
                 {
                     b.Navigation("Devices");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Release", b =>
+                {
+                    b.Navigation("Rollouts");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Rollout", b =>
+                {
+                    b.Navigation("Waves");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Wave", b =>
+                {
+                    b.Navigation("Targets");
                 });
 #pragma warning restore 612, 618
         }
