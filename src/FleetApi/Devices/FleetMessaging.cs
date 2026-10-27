@@ -11,6 +11,8 @@ public static class FleetMessaging
     public const string HeartbeatQueue = "fleetpulse.device-heartbeats";
     public const string TelemetryQueue = "fleetpulse.device-telemetry";
     public const string CommandQueue = "fleetpulse.deliver-command";
+    public const string CommandAckQueue = "fleetpulse.command-acknowledged";
+    public const string CommandResultQueue = "fleetpulse.command-completed";
 
     public static void Configure(WolverineOptions options)
     {
@@ -18,6 +20,8 @@ public static class FleetMessaging
         options.UseRabbitMqUsingNamedConnection("rabbitmq").AutoProvision();
         options.ListenToRabbitQueue(HeartbeatQueue).ProcessInline();
         options.ListenToRabbitQueue(TelemetryQueue).ProcessInline();
+        options.ListenToRabbitQueue(CommandAckQueue).ProcessInline();
+        options.ListenToRabbitQueue(CommandResultQueue).ProcessInline();
     }
 
     public static void ConfigureOutbox(WolverineOptions options, string connectionString)

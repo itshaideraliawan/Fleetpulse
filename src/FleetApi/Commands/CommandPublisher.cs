@@ -63,7 +63,8 @@ public sealed class CommandPublisher(IDbContextOutbox<FleetDbContext> outbox, IC
                     Id = targetId,
                     CommandGroupId = command.Id,
                     DeviceId = targetDeviceId,
-                    CreatedAtUtc = now
+                    CreatedAtUtc = now,
+                    LastSentAtUtc = now
                 });
                 var message = new DeviceCommand(
                     new DeviceMessageHeader(DeviceProtocolVersion.Current, targetDeviceId, now),

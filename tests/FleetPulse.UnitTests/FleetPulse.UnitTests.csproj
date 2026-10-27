@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Contracts/Contracts.csproj" />
+    <ProjectReference Include="../../src/FleetApi/FleetApi.csproj" />
     <ProjectReference Include="../../src/Gateway/Gateway.csproj" />
     <ProjectReference Include="../../src/Simulator/Simulator.csproj" />
   </ItemGroup>
