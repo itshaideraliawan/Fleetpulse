@@ -16,6 +16,7 @@ public sealed class FleetDbContext(DbContextOptions<FleetDbContext> options) : D
     public DbSet<Rollout> Rollouts => Set<Rollout>();
     public DbSet<Wave> Waves => Set<Wave>();
     public DbSet<WaveTarget> WaveTargets => Set<WaveTarget>();
+    public DbSet<RolloutTransition> RolloutTransitions => Set<RolloutTransition>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

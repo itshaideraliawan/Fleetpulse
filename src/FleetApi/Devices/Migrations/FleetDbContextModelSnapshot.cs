@@ -190,6 +190,9 @@ namespace FleetApi.Devices.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int?>("CurrentWaveNumber")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("ReleaseId")
                         .HasColumnType("uniqueidentifier");
 
@@ -201,6 +204,10 @@ namespace FleetApi.Devices.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<int>("TransitionVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAtUtc");
@@ -208,6 +215,45 @@ namespace FleetApi.Devices.Migrations
                     b.HasIndex("ReleaseId");
 
                     b.ToTable("Rollouts");
+                });
+
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.RolloutTransition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("FromStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FromWaveNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<Guid>("RolloutId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ToStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ToWaveNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RolloutId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("RolloutTransitions");
                 });
 
             modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Wave", b =>
@@ -307,6 +353,15 @@ namespace FleetApi.Devices.Migrations
                     b.Navigation("Release");
                 });
 
+            modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.RolloutTransition", b =>
+                {
+                    b.HasOne("FleetPulse.FleetApi.Rollouts.Rollout", null)
+                        .WithMany("Transitions")
+                        .HasForeignKey("RolloutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Wave", b =>
                 {
                     b.HasOne("FleetPulse.FleetApi.Rollouts.Rollout", "Rollout")
@@ -358,6 +413,8 @@ namespace FleetApi.Devices.Migrations
 
             modelBuilder.Entity("FleetPulse.FleetApi.Rollouts.Rollout", b =>
                 {
+                    b.Navigation("Transitions");
+
                     b.Navigation("Waves");
                 });
 

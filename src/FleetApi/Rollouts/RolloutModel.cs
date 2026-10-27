@@ -26,9 +26,26 @@ internal static class RolloutModel
                 .HasConversion(id => id.Value, value => ReleaseId.From(value));
             entity.Property(rollout => rollout.Status).HasConversion<int>();
             entity.Property(rollout => rollout.StateReason).HasMaxLength(512).IsRequired();
+            entity.Property(rollout => rollout.TransitionVersion).IsConcurrencyToken();
+            entity.HasMany(rollout => rollout.Transitions).WithOne()
+                .HasForeignKey(transition => transition.RolloutId);
+            entity.Navigation(rollout => rollout.Transitions).HasField("_transitions")
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
             entity.HasOne(rollout => rollout.Release).WithMany(release => release.Rollouts)
                 .HasForeignKey(rollout => rollout.ReleaseId).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(rollout => rollout.CreatedAtUtc);
+        });
+
+        modelBuilder.Entity<RolloutTransition>(entity =>
+        {
+            entity.HasKey(transition => transition.Id);
+            entity.Property(transition => transition.Id).ValueGeneratedNever();
+            entity.Property(transition => transition.RolloutId)
+                .HasConversion(id => id.Value, value => RolloutId.From(value));
+            entity.Property(transition => transition.FromStatus).HasConversion<int>();
+            entity.Property(transition => transition.ToStatus).HasConversion<int>();
+            entity.Property(transition => transition.Reason).HasMaxLength(RolloutStateMachine.MaxReasonLength).IsRequired();
+            entity.HasIndex(transition => new { transition.RolloutId, transition.Sequence }).IsUnique();
         });
 
         modelBuilder.Entity<Wave>(entity =>
