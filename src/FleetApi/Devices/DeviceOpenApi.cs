@@ -8,7 +8,7 @@ public static class DeviceOpenApi
     public static IServiceCollection AddFleetOpenApi(this IServiceCollection services) =>
         services.AddOpenApi(options => options.AddSchemaTransformer((schema, context, _) =>
         {
-            if (context.JsonTypeInfo.Type == typeof(DeviceId))
+            if (context.JsonTypeInfo.Type == typeof(DeviceId) || context.JsonTypeInfo.Type == typeof(CommandId))
             {
                 schema.Type = JsonSchemaType.String;
                 schema.Format = "uuid";

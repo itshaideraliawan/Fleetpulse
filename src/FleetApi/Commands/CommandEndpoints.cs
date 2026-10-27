@@ -11,6 +11,15 @@ public static class CommandEndpoints
 {
     public static WebApplication MapCommandEndpoints(this WebApplication app)
     {
+        app.MapGet("/api/commands", async (CommandQueries queries, CancellationToken cancellationToken) =>
+                TypedResults.Ok(await queries.RecentAsync(cancellationToken)))
+            .WithName("GetRecentCommands").WithTags("Commands")
+            .WithSummary("Get the 20 most recent commands");
+        app.MapGet("/api/commands/{id:guid}", GetAsync)
+            .WithName("GetCommandProgress").WithTags("Commands")
+            .WithSummary("Get command progress and a page of per-device results")
+            .Produces<CommandProgress>().ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound);
         app.MapPost("/api/commands", CreateAsync)
             .WithName("CreateCommand")
             .WithTags("Commands")
@@ -19,6 +28,20 @@ public static class CommandEndpoints
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound);
         return app;
+    }
+
+    private static async Task<IResult> GetAsync(Guid id, int? page, int? pageSize,
+        CommandTargetStatus? status, CommandQueries queries, CancellationToken cancellationToken)
+    {
+        var errors = new Dictionary<string, string[]>();
+        if (page is < 1 or > 1_000_000) errors["page"] = ["Page must be between 1 and 1000000."];
+        if (pageSize is < 1 or > 100) errors["pageSize"] = ["Page size must be between 1 and 100."];
+        if (status is not null && !Enum.IsDefined(status.Value)) errors["status"] = ["Unknown target status."];
+        if (errors.Count > 0) return TypedResults.ValidationProblem(errors);
+        var progress = await queries.GetAsync(id, page ?? 1, pageSize ?? 25, status, cancellationToken);
+        return progress is null
+            ? TypedResults.Problem(statusCode: StatusCodes.Status404NotFound, title: "Command not found")
+            : TypedResults.Ok(progress);
     }
 
     private static async Task<IResult> CreateAsync(CreateCommandRequest request,
