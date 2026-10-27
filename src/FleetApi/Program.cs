@@ -25,6 +25,7 @@ builder.Services.AddSignalR()
     .AddStackExchangeRedis(redisConnectionString, options =>
         options.Configuration.ChannelPrefix = RedisChannel.Literal("fleetpulse:operator"));
 builder.Services.AddHostedService<OfflineDetectionWorker>();
+builder.Services.AddHostedService<CommandRetryWorker>();
 builder.Services.AddHostedService<StatusBroadcaster>();
 builder.UseWolverine(options =>
 {

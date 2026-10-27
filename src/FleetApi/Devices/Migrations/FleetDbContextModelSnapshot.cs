@@ -48,14 +48,36 @@ namespace FleetApi.Devices.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("AcknowledgedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<Guid>("CommandGroupId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("DeviceId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("LastSentAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ResultDetail")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -65,6 +87,8 @@ namespace FleetApi.Devices.Migrations
                     b.HasIndex("DeviceId");
 
                     b.HasIndex("CommandGroupId", "Status");
+
+                    b.HasIndex("Status", "LastSentAtUtc");
 
                     b.ToTable("CommandTargets");
                 });

@@ -58,12 +58,15 @@ public sealed class FleetDbContext(DbContextOptions<FleetDbContext> options) : D
             entity.Property(target => target.DeviceId)
                 .HasConversion(id => id.Value, value => DeviceId.From(value));
             entity.Property(target => target.Status).HasConversion<int>();
+            entity.Property(target => target.ResultDetail).HasMaxLength(512);
+            entity.Property(target => target.RowVersion).IsRowVersion();
             entity.HasOne(target => target.Command).WithMany(command => command.Targets)
                 .HasForeignKey(target => target.CommandGroupId);
             entity.HasOne<Device>().WithMany().HasForeignKey(target => target.DeviceId)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(target => new { target.CommandGroupId, target.Status });
             entity.HasIndex(target => target.DeviceId);
+            entity.HasIndex(target => new { target.Status, target.LastSentAtUtc });
         });
     }
 }

@@ -18,5 +18,11 @@ public sealed class CommandTarget
     public DeviceId DeviceId { get; set; }
     public CommandTargetStatus Status { get; set; } = CommandTargetStatus.Pending;
     public DateTimeOffset CreatedAtUtc { get; set; }
+    public DateTimeOffset LastSentAtUtc { get; set; }
+    public int RetryCount { get; set; }
+    public DateTimeOffset? AcknowledgedAtUtc { get; set; }
+    public DateTimeOffset? CompletedAtUtc { get; set; }
+    public string? ResultDetail { get; set; }
+    public byte[] RowVersion { get; set; } = [];
     public Command Command { get; set; } = null!;
 }
