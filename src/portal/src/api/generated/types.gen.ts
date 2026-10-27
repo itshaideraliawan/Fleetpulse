@@ -4,6 +4,60 @@ export type ClientOptions = {
     baseUrl: `${string}://openapi.json` | (string & {});
 };
 
+export type CommandId = string;
+
+export type CommandKind = number;
+
+export type CommandProgress = {
+    summary: CommandSummary;
+    total: number | string;
+    page: number | string;
+    pageSize: number | string;
+    items: Array<CommandTargetResult>;
+};
+
+export type CommandSummary = {
+    id: string;
+    kind: CommandKind;
+    createdAtUtc: string;
+    expiresAtUtc: string;
+    total: number | string;
+    pending: number | string;
+    acknowledged: number | string;
+    succeeded: number | string;
+    failed: number | string;
+    expired: number | string;
+};
+
+export type CommandTargetResult = {
+    id: CommandId;
+    deviceId: DeviceId;
+    serialNumber: string;
+    model: string;
+    regionName: string;
+    status: CommandTargetStatus;
+    retryCount: number | string;
+    acknowledgedAtUtc: null | string;
+    completedAtUtc: null | string;
+    detail: null | string;
+};
+
+export type CommandTargetStatus = number;
+
+export type CreateCommandRequest = {
+    kind: CommandKind;
+    deviceId: null | string;
+    regionId: null | number | string;
+    model: null | string;
+    fleet: boolean;
+    expiresInSeconds: null | number | string;
+};
+
+export type CreateCommandResult = {
+    commandId: string;
+    targetCount: number | string;
+};
+
 export type DeviceDetail = {
     device: DeviceListItem;
     cpuPercent: null | number | string;
@@ -73,6 +127,86 @@ export type RegionSummary = {
     degradedDevices: number | string;
     unhealthyDevices: number | string;
 };
+
+export type GetRecentCommandsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/commands';
+};
+
+export type GetRecentCommandsResponses = {
+    /**
+     * OK
+     */
+    200: Array<CommandSummary>;
+};
+
+export type GetRecentCommandsResponse = GetRecentCommandsResponses[keyof GetRecentCommandsResponses];
+
+export type CreateCommandData = {
+    body: CreateCommandRequest;
+    path?: never;
+    query?: never;
+    url: '/api/commands';
+};
+
+export type CreateCommandErrors = {
+    /**
+     * Bad Request
+     */
+    400: HttpValidationProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type CreateCommandError = CreateCommandErrors[keyof CreateCommandErrors];
+
+export type CreateCommandResponses = {
+    /**
+     * Accepted
+     */
+    202: CreateCommandResult;
+};
+
+export type CreateCommandResponse = CreateCommandResponses[keyof CreateCommandResponses];
+
+export type GetCommandProgressData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: {
+        page?: number | string;
+        pageSize?: number | string;
+        status?: CommandTargetStatus;
+    };
+    url: '/api/commands/{id}';
+};
+
+export type GetCommandProgressErrors = {
+    /**
+     * Bad Request
+     */
+    400: HttpValidationProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetCommandProgressError = GetCommandProgressErrors[keyof GetCommandProgressErrors];
+
+export type GetCommandProgressResponses = {
+    /**
+     * OK
+     */
+    200: CommandProgress;
+};
+
+export type GetCommandProgressResponse = GetCommandProgressResponses[keyof GetCommandProgressResponses];
 
 export type GetFleetSummaryData = {
     body?: never;

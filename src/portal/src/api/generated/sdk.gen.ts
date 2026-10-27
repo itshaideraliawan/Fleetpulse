@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetDeviceData, GetDeviceErrors, GetDeviceResponses, GetFleetSummaryData, GetFleetSummaryResponses, SearchDevicesData, SearchDevicesErrors, SearchDevicesResponses } from './types.gen';
+import type { CreateCommandData, CreateCommandErrors, CreateCommandResponses, GetCommandProgressData, GetCommandProgressErrors, GetCommandProgressResponses, GetDeviceData, GetDeviceErrors, GetDeviceResponses, GetFleetSummaryData, GetFleetSummaryResponses, GetRecentCommandsData, GetRecentCommandsResponses, SearchDevicesData, SearchDevicesErrors, SearchDevicesResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,28 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Get the 20 most recent commands
+ */
+export const getRecentCommands = <ThrowOnError extends boolean = false>(options?: Options<GetRecentCommandsData, ThrowOnError>): RequestResult<GetRecentCommandsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetRecentCommandsResponses, unknown, ThrowOnError>({ url: '/api/commands', ...options });
+
+/**
+ * Create a diagnostics command for a device, group, or fleet
+ */
+export const createCommand = <ThrowOnError extends boolean = false>(options: Options<CreateCommandData, ThrowOnError>): RequestResult<CreateCommandResponses, CreateCommandErrors, ThrowOnError> => (options.client ?? client).post<CreateCommandResponses, CreateCommandErrors, ThrowOnError>({
+    url: '/api/commands',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get command progress and a page of per-device results
+ */
+export const getCommandProgress = <ThrowOnError extends boolean = false>(options: Options<GetCommandProgressData, ThrowOnError>): RequestResult<GetCommandProgressResponses, GetCommandProgressErrors, ThrowOnError> => (options.client ?? client).get<GetCommandProgressResponses, GetCommandProgressErrors, ThrowOnError>({ url: '/api/commands/{id}', ...options });
 
 /**
  * Get fleet and regional connection and health counts

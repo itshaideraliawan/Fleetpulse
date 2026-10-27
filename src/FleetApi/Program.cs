@@ -19,6 +19,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer
 builder.Services.AddSingleton<RedisFleetState>();
 builder.Services.AddScoped<DeviceQueries>();
 builder.Services.AddScoped<CommandPublisher>();
+builder.Services.AddScoped<CommandQueries>();
 builder.Services.AddProblemDetails();
 builder.Services.AddFleetOpenApi();
 builder.Services.AddSignalR()
