@@ -22,6 +22,7 @@ builder.Services.AddScoped<DeviceQueries>();
 builder.Services.AddScoped<CommandPublisher>();
 builder.Services.AddScoped<CommandQueries>();
 builder.Services.AddScoped<RolloutPlanner>();
+builder.Services.AddSingleton<RolloutStateMachine>();
 builder.Services.AddProblemDetails();
 builder.Services.AddFleetOpenApi();
 builder.Services.AddSignalR()
