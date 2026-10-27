@@ -1,5 +1,6 @@
 using FleetPulse.Contracts.Ids;
 using FleetPulse.FleetApi.Devices;
+using FleetPulse.FleetApi.Commands;
 using Microsoft.EntityFrameworkCore;
 
 namespace FleetPulse.FleetApi.Rollouts;
@@ -71,6 +72,19 @@ internal static class RolloutModel
             entity.Property(target => target.DeviceId)
                 .HasConversion(id => id.Value, value => DeviceId.From(value));
             entity.Property(target => target.OriginalFirmwareVersion).HasMaxLength(40).IsRequired();
+            entity.Property(target => target.InstallCommandId)
+                .HasConversion(id => id.HasValue ? id.Value.Value : (Guid?)null,
+                    value => value.HasValue ? CommandId.From(value.Value) : null);
+            entity.Property(target => target.RollbackCommandId)
+                .HasConversion(id => id.HasValue ? id.Value.Value : (Guid?)null,
+                    value => value.HasValue ? CommandId.From(value.Value) : null);
+            entity.Property(target => target.InstallOutcome).HasConversion<int?>();
+            entity.Property(target => target.RollbackOutcome).HasConversion<int?>();
+            entity.Property(target => target.RowVersion).IsRowVersion();
+            entity.HasOne(target => target.InstallCommand).WithMany()
+                .HasForeignKey(target => target.InstallCommandId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(target => target.RollbackCommand).WithMany()
+                .HasForeignKey(target => target.RollbackCommandId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(target => target.Wave).WithMany(wave => wave.Targets)
                 .HasForeignKey(target => new { target.RolloutId, target.WaveId })
                 .HasPrincipalKey(wave => new { wave.RolloutId, wave.Id });

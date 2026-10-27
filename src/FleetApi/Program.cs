@@ -23,6 +23,7 @@ builder.Services.AddScoped<CommandPublisher>();
 builder.Services.AddScoped<CommandQueries>();
 builder.Services.AddScoped<RolloutPlanner>();
 builder.Services.AddSingleton<RolloutStateMachine>();
+builder.Services.AddScoped<RolloutOrchestrator>();
 builder.Services.AddProblemDetails();
 builder.Services.AddFleetOpenApi();
 builder.Services.AddSignalR()
@@ -30,6 +31,7 @@ builder.Services.AddSignalR()
         options.Configuration.ChannelPrefix = RedisChannel.Literal("fleetpulse:operator"));
 builder.Services.AddHostedService<OfflineDetectionWorker>();
 builder.Services.AddHostedService<CommandRetryWorker>();
+builder.Services.AddHostedService<RolloutWorker>();
 builder.Services.AddHostedService<StatusBroadcaster>();
 builder.UseWolverine(options =>
 {

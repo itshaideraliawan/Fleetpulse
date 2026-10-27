@@ -8,6 +8,9 @@ public sealed class Wave
     public RolloutId RolloutId { get; set; }
     public int Number { get; set; }
     public int CumulativePercentage { get; set; }
+    public int? GateFailures { get; set; }
+    public int? GateTotal { get; set; }
+    public DateTimeOffset? GateCheckedAtUtc { get; set; }
     public Rollout Rollout { get; set; } = null!;
     public ICollection<WaveTarget> Targets { get; } = new List<WaveTarget>();
 }

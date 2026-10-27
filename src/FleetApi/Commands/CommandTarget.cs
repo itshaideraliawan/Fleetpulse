@@ -1,4 +1,5 @@
 using FleetPulse.Contracts.Ids;
+using FleetPulse.Contracts.DeviceProtocol;
 
 namespace FleetPulse.FleetApi.Commands;
 
@@ -24,5 +25,13 @@ public sealed class CommandTarget
     public DateTimeOffset? CompletedAtUtc { get; set; }
     public string? ResultDetail { get; set; }
     public byte[] RowVersion { get; set; } = [];
+    public ReleaseId? ReleaseId { get; set; }
+    public RolloutId? RolloutId { get; set; }
+    public WaveId? WaveId { get; set; }
+    public string? FirmwareVersion { get; set; }
     public Command Command { get; set; } = null!;
+
+    public DeviceCommand ToDeviceCommand(DateTimeOffset sentAtUtc) => new(
+        new DeviceMessageHeader(DeviceProtocolVersion.Current, DeviceId, sentAtUtc),
+        Id, Command.Kind, Command.ExpiresAtUtc, ReleaseId, RolloutId, WaveId, FirmwareVersion);
 }

@@ -63,8 +63,15 @@ namespace FleetApi.Devices.Migrations
                     b.Property<Guid>("DeviceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("FirmwareVersion")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
                     b.Property<DateTimeOffset>("LastSentAtUtc")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ReleaseId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ResultDetail")
                         .HasMaxLength(512)
@@ -72,6 +79,9 @@ namespace FleetApi.Devices.Migrations
 
                     b.Property<int>("RetryCount")
                         .HasColumnType("int");
+
+                    b.Property<Guid?>("RolloutId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -81,6 +91,9 @@ namespace FleetApi.Devices.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<Guid?>("WaveId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -264,6 +277,15 @@ namespace FleetApi.Devices.Migrations
                     b.Property<int>("CumulativePercentage")
                         .HasColumnType("int");
 
+                    b.Property<DateTimeOffset?>("GateCheckedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("GateFailures")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("GateTotal")
+                        .HasColumnType("int");
+
                     b.Property<int>("Number")
                         .HasColumnType("int");
 
@@ -286,10 +308,28 @@ namespace FleetApi.Devices.Migrations
                     b.Property<Guid>("DeviceId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("InstallCommandId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("InstallOutcome")
+                        .HasColumnType("int");
+
                     b.Property<string>("OriginalFirmwareVersion")
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
+
+                    b.Property<Guid?>("RollbackCommandId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("RollbackOutcome")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<Guid>("WaveId")
                         .HasColumnType("uniqueidentifier");
@@ -297,6 +337,10 @@ namespace FleetApi.Devices.Migrations
                     b.HasKey("RolloutId", "DeviceId");
 
                     b.HasIndex("DeviceId");
+
+                    b.HasIndex("InstallCommandId");
+
+                    b.HasIndex("RollbackCommandId");
 
                     b.HasIndex("RolloutId", "WaveId");
 
@@ -381,12 +425,26 @@ namespace FleetApi.Devices.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("FleetPulse.FleetApi.Commands.CommandTarget", "InstallCommand")
+                        .WithMany()
+                        .HasForeignKey("InstallCommandId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FleetPulse.FleetApi.Commands.CommandTarget", "RollbackCommand")
+                        .WithMany()
+                        .HasForeignKey("RollbackCommandId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("FleetPulse.FleetApi.Rollouts.Wave", "Wave")
                         .WithMany("Targets")
                         .HasForeignKey("RolloutId", "WaveId")
                         .HasPrincipalKey("RolloutId", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("InstallCommand");
+
+                    b.Navigation("RollbackCommand");
 
                     b.Navigation("Wave");
                 });
