@@ -35,11 +35,15 @@ if (simulatorDevices is < 0 or > 5000)
 if (simulatorDevices > 0)
 {
     var commandFailureRate = builder.Configuration["Simulator:CommandFailureRate"] ?? "0";
-    builder.AddProject<Projects.Simulator>("simulator")
+    var simulator = builder.AddProject<Projects.Simulator>("simulator")
         .WithEnvironment("GATEWAY_URL", gateway.GetEndpoint("http"))
         .WithArgs("--devices", simulatorDevices.ToString(System.Globalization.CultureInfo.InvariantCulture),
             "--command-failure-rate", commandFailureRate)
         .WaitFor(gateway);
+    if (builder.Configuration["Simulator:BadReleaseVersion"] is { } badReleaseVersion)
+        simulator.WithArgs("--bad-release-version", badReleaseVersion);
+    if (builder.Configuration["Simulator:BadReleaseModel"] is { } badReleaseModel)
+        simulator.WithArgs("--bad-release-model", badReleaseModel);
 }
 
 builder.Build().Run();
