@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateCommandData, CreateCommandErrors, CreateCommandResponses, GetCommandProgressData, GetCommandProgressErrors, GetCommandProgressResponses, GetDeviceData, GetDeviceErrors, GetDeviceResponses, GetFleetSummaryData, GetFleetSummaryResponses, GetRecentCommandsData, GetRecentCommandsResponses, SearchDevicesData, SearchDevicesErrors, SearchDevicesResponses } from './types.gen';
+import type { CreateCommandData, CreateCommandErrors, CreateCommandResponses, CreateRolloutData, CreateRolloutErrors, CreateRolloutResponses, GetCommandProgressData, GetCommandProgressErrors, GetCommandProgressResponses, GetDeviceData, GetDeviceErrors, GetDeviceResponses, GetFleetSummaryData, GetFleetSummaryResponses, GetRecentCommandsData, GetRecentCommandsResponses, GetRecentRolloutsData, GetRecentRolloutsResponses, GetRolloutProgressData, GetRolloutProgressErrors, GetRolloutProgressResponses, SearchDevicesData, SearchDevicesErrors, SearchDevicesResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -54,3 +54,19 @@ export const searchDevices = <ThrowOnError extends boolean = false>(options?: Op
  * Get a device and its latest telemetry
  */
 export const getDevice = <ThrowOnError extends boolean = false>(options: Options<GetDeviceData, ThrowOnError>): RequestResult<GetDeviceResponses, GetDeviceErrors, ThrowOnError> => (options.client ?? client).get<GetDeviceResponses, GetDeviceErrors, ThrowOnError>({ url: '/api/devices/{id}', ...options });
+
+export const getRecentRollouts = <ThrowOnError extends boolean = false>(options?: Options<GetRecentRolloutsData, ThrowOnError>): RequestResult<GetRecentRolloutsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetRecentRolloutsResponses, unknown, ThrowOnError>({ url: '/api/rollouts', ...options });
+
+/**
+ * Start a staged rollout for matching devices, ordered by serial number
+ */
+export const createRollout = <ThrowOnError extends boolean = false>(options: Options<CreateRolloutData, ThrowOnError>): RequestResult<CreateRolloutResponses, CreateRolloutErrors, ThrowOnError> => (options.client ?? client).post<CreateRolloutResponses, CreateRolloutErrors, ThrowOnError>({
+    url: '/api/rollouts',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const getRolloutProgress = <ThrowOnError extends boolean = false>(options: Options<GetRolloutProgressData, ThrowOnError>): RequestResult<GetRolloutProgressResponses, GetRolloutProgressErrors, ThrowOnError> => (options.client ?? client).get<GetRolloutProgressResponses, GetRolloutProgressErrors, ThrowOnError>({ url: '/api/rollouts/{id}', ...options });

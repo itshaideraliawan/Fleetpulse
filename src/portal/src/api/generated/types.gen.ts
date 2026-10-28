@@ -58,6 +58,13 @@ export type CreateCommandResult = {
     targetCount: number | string;
 };
 
+export type CreateRolloutRequest = {
+    firmwareVersion: string;
+    regionId: null | number | string;
+    model: null | string;
+    maxDevices: null | number | string;
+};
+
 export type DeviceDetail = {
     device: DeviceListItem;
     cpuPercent: null | number | string;
@@ -126,6 +133,49 @@ export type RegionSummary = {
     healthyDevices: number | string;
     degradedDevices: number | string;
     unhealthyDevices: number | string;
+};
+
+export type RolloutId = string;
+
+export type RolloutProgress = {
+    summary: RolloutSummary;
+    stateReason: string;
+    haltReason: null | string;
+    waves: Array<WaveProgress>;
+    transitions: Array<RolloutTransitionView>;
+};
+
+export type RolloutStatus = number;
+
+export type RolloutSummary = {
+    id: RolloutId;
+    firmwareVersion: string;
+    createdAtUtc: string;
+    status: RolloutStatus;
+    currentWaveNumber: null | number | string;
+    total: number | string;
+};
+
+export type RolloutTransitionView = {
+    sequence: number | string;
+    status: RolloutStatus;
+    waveNumber: null | number | string;
+    reason: string;
+    occurredAtUtc: string;
+};
+
+export type WaveProgress = {
+    number: number | string;
+    cumulativePercentage: number | string;
+    total: number | string;
+    installed: number | string;
+    failed: number | string;
+    unresolvedInstalls: number | string;
+    gateFailures: null | number | string;
+    gateTotal: null | number | string;
+    gateCheckedAtUtc: null | string;
+    rolledBack: number | string;
+    rollbackFailed: number | string;
 };
 
 export type GetRecentCommandsData = {
@@ -283,3 +333,79 @@ export type GetDeviceResponses = {
 };
 
 export type GetDeviceResponse = GetDeviceResponses[keyof GetDeviceResponses];
+
+export type GetRecentRolloutsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/rollouts';
+};
+
+export type GetRecentRolloutsResponses = {
+    /**
+     * OK
+     */
+    200: Array<RolloutSummary>;
+};
+
+export type GetRecentRolloutsResponse = GetRecentRolloutsResponses[keyof GetRecentRolloutsResponses];
+
+export type CreateRolloutData = {
+    body: CreateRolloutRequest;
+    path?: never;
+    query?: never;
+    url: '/api/rollouts';
+};
+
+export type CreateRolloutErrors = {
+    /**
+     * Bad Request
+     */
+    400: HttpValidationProblemDetails;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type CreateRolloutError = CreateRolloutErrors[keyof CreateRolloutErrors];
+
+export type CreateRolloutResponses = {
+    /**
+     * Accepted
+     */
+    202: RolloutSummary;
+};
+
+export type CreateRolloutResponse = CreateRolloutResponses[keyof CreateRolloutResponses];
+
+export type GetRolloutProgressData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/rollouts/{id}';
+};
+
+export type GetRolloutProgressErrors = {
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetRolloutProgressError = GetRolloutProgressErrors[keyof GetRolloutProgressErrors];
+
+export type GetRolloutProgressResponses = {
+    /**
+     * OK
+     */
+    200: RolloutProgress;
+};
+
+export type GetRolloutProgressResponse = GetRolloutProgressResponses[keyof GetRolloutProgressResponses];
