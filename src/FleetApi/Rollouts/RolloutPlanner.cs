@@ -2,6 +2,7 @@ using FleetPulse.Contracts.Ids;
 using FleetPulse.Contracts.Time;
 using FleetPulse.FleetApi.Devices;
 using Microsoft.EntityFrameworkCore;
+using FleetPulse.FleetApi.Demo;
 
 namespace FleetPulse.FleetApi.Rollouts;
 
@@ -49,6 +50,7 @@ public sealed class RolloutPlanner(FleetDbContext db, IClock clock)
         }
 
         db.Rollouts.Add(rollout);
+        await DemoControlState.TouchWorkAsync(db, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         return rollout;
     }

@@ -65,6 +65,38 @@ export type CreateRolloutRequest = {
     maxDevices: null | number | string;
 };
 
+export type DemoAction = number;
+
+export type DemoControlSnapshot = {
+    revision: number | string;
+    admissionEnabled: boolean;
+    badReleaseVersion: null | string;
+    badReleaseModel: null | string;
+    dropGeneration: number | string;
+    resetGeneration: number | string;
+    resetAtUtc: null | string;
+};
+
+export type DemoRequest = {
+    requestId: string;
+    expectedRevision: number | string;
+    action: DemoAction;
+    admissionEnabled: boolean;
+    badReleaseVersion: null | string;
+    badReleaseModel: null | string;
+};
+
+export type DemoStatus = {
+    desired: DemoControlSnapshot;
+    appliedRevision: number | string;
+    sampledAtUtc: string;
+    dropAtUtc: null | string;
+    recoveryTarget: number | string;
+    connectedDevices: number | string;
+    resetPending: boolean;
+    gateways: Array<GatewayDemoStatus>;
+};
+
 export type DeviceDetail = {
     device: DeviceListItem;
     cpuPercent: null | number | string;
@@ -103,6 +135,15 @@ export type FleetSummary = {
     degradedDevices: number | string;
     unhealthyDevices: number | string;
     regions: Array<RegionSummary>;
+};
+
+export type GatewayDemoStatus = {
+    instanceId: string;
+    revision: number | string;
+    connectedDevices: number | string;
+    configuredDevices: number | string;
+    observedAtUtc: string;
+    admissionEnabled: boolean;
 };
 
 export type HttpValidationProblemDetails = {
@@ -210,6 +251,10 @@ export type CreateCommandErrors = {
      * Not Found
      */
     404: ProblemDetails;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
 };
 
 export type CreateCommandError = CreateCommandErrors[keyof CreateCommandErrors];
@@ -409,3 +454,48 @@ export type GetRolloutProgressResponses = {
 };
 
 export type GetRolloutProgressResponse = GetRolloutProgressResponses[keyof GetRolloutProgressResponses];
+
+export type GetDemoStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/demo';
+};
+
+export type GetDemoStatusResponses = {
+    /**
+     * OK
+     */
+    200: DemoStatus;
+};
+
+export type GetDemoStatusResponse = GetDemoStatusResponses[keyof GetDemoStatusResponses];
+
+export type ApplyDemoControlData = {
+    body: DemoRequest;
+    path?: never;
+    query?: never;
+    url: '/api/demo';
+};
+
+export type ApplyDemoControlErrors = {
+    /**
+     * Bad Request
+     */
+    400: HttpValidationProblemDetails;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type ApplyDemoControlError = ApplyDemoControlErrors[keyof ApplyDemoControlErrors];
+
+export type ApplyDemoControlResponses = {
+    /**
+     * Accepted
+     */
+    202: DemoStatus;
+};
+
+export type ApplyDemoControlResponse = ApplyDemoControlResponses[keyof ApplyDemoControlResponses];

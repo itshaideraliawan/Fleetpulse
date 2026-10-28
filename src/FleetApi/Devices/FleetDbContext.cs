@@ -1,6 +1,7 @@
 using FleetPulse.Contracts.Ids;
 using FleetPulse.FleetApi.Commands;
 using FleetPulse.FleetApi.Rollouts;
+using FleetPulse.FleetApi.Demo;
 using Microsoft.EntityFrameworkCore;
 
 namespace FleetPulse.FleetApi.Devices;
@@ -17,10 +18,21 @@ public sealed class FleetDbContext(DbContextOptions<FleetDbContext> options) : D
     public DbSet<Wave> Waves => Set<Wave>();
     public DbSet<WaveTarget> WaveTargets => Set<WaveTarget>();
     public DbSet<RolloutTransition> RolloutTransitions => Set<RolloutTransition>();
+    public DbSet<DemoControlState> DemoControls => Set<DemoControlState>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         RolloutModel.Configure(modelBuilder);
+        modelBuilder.Entity<DemoControlState>(entity =>
+        {
+            entity.HasKey(state => state.Id);
+            entity.Property(state => state.Id).ValueGeneratedNever();
+            entity.Property(state => state.Revision).IsConcurrencyToken();
+            entity.Property(state => state.WorkVersion).IsConcurrencyToken();
+            entity.Property(state => state.BadReleaseVersion).HasMaxLength(40);
+            entity.Property(state => state.BadReleaseModel).HasMaxLength(40);
+            entity.HasData(new DemoControlState());
+        });
         modelBuilder.Entity<Region>(entity =>
         {
             entity.HasKey(region => region.Id);

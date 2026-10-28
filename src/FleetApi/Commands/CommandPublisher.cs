@@ -6,6 +6,7 @@ using FleetPulse.FleetApi.Devices;
 using Microsoft.EntityFrameworkCore;
 using Wolverine.EntityFrameworkCore;
 using Wolverine.Runtime;
+using FleetPulse.FleetApi.Demo;
 
 namespace FleetPulse.FleetApi.Commands;
 
@@ -72,6 +73,7 @@ public sealed class CommandPublisher(IDbContextOutbox<FleetDbContext> outbox, IC
                 await outbox.PublishAsync(new DeliverCommand(message));
             }
 
+            await DemoControlState.TouchWorkAsync(db, cancellationToken);
             await outbox.SaveChangesAndFlushMessagesAsync(MultiFlushMode.AllowMultiples,
                 cancellationToken);
             db.ChangeTracker.Clear();

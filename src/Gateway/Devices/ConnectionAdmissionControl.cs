@@ -19,11 +19,21 @@ public sealed class ConnectionAdmissionControl(IOptionsMonitor<AdmissionControlO
     private long _lastTimestamp;
     private int _capacity;
     private int _rate;
+    private int _demoEnabled = -1;
+    public bool Enabled
+    {
+        get
+        {
+            var enabled = Volatile.Read(ref _demoEnabled);
+            return enabled >= 0 ? enabled == 1 : options.CurrentValue.Enabled;
+        }
+    }
+    public void SetDemoEnabled(bool enabled) => Volatile.Write(ref _demoEnabled, enabled ? 1 : 0);
 
     public AdmissionDecision TryAcquire()
     {
         var settings = options.CurrentValue;
-        if (!settings.Enabled) return new AdmissionDecision(true, 0);
+        if (!Enabled) return new AdmissionDecision(true, 0);
 
         lock (_lock)
         {

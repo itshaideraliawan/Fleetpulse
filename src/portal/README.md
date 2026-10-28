@@ -53,3 +53,40 @@ captures the devices' current SQL firmware as its rollback destination.
 The selected rollout is polled once per second with overlapping requests
 prevented; recent history is refreshed every five seconds. Errors retain the last
 results with a stale-data notice. No additional operator-hub pushes are added.
+
+## Demo Control
+
+Start Aspire and the portal as above, then open Demo control. The screen polls
+once per second and shows actual device sessions across active Gateways. Apply
+settings and wait for **Applied** before starting a scenario. Requests carry an
+expected revision and request ID; uncertain writes are not automatically retried.
+
+- **Inject bad release:** enable it, select version `2.4.0` and model `Kiosk-B`,
+  then Apply settings. Launch the same version on Rollouts. A cohort of the first
+  100 devices passes wave 1 and fails wave 2. A 5000-device canary includes all
+  models and can fail wave 1; this control does not defer injection until wave 2.
+  Apply settings first to override any simulator startup fault flags.
+- **Admission control:** check or clear the toggle and Apply settings. All
+  reporting Gateways use the saved setting; rate/burst remain per-instance.
+- **Drop connections:** closes device sockets on every Gateway. The chart uses
+  actual session counts, not the telemetry online count, which has a 45-second
+  offline window. Compare two drops with admission enabled/disabled, keeping
+  other conditions fixed. A setting change during a run is labeled explicitly.
+- **Reset fleet:** confirm history deletion, then Reset. Active commands or
+  nonterminal rollouts return a conflict. Reset clears command/release/rollout
+  history and hot telemetry, restores SQL/device firmware 1.0.0, disables fault
+  injection, enables admission, and reconnects devices. New work is blocked
+  until current Gateway sessions acknowledge reset. Stale telemetry and commands
+  cannot undo the baseline. Inventory identities and site/region data remain.
+
+Recovery curves retain the latest two runs in this mounted screen, sample for
+up to 180 seconds, and clear on reset or navigation. A very fast drop/reconnect
+can happen between samples. Gateway reports expire after five seconds; a stopped
+Gateway ages out. These are demo observations, not the D6-03 benchmark results.
+If a reset remains pending, restore Gateway/Redis availability and wait for
+device configuration acknowledgement; do not start another rollout.
+
+Controls are for the local demo and have no authentication, matching the project
+scope. Keep the local stack on trusted interfaces. Fleet API publishes through
+its SQL transactional outbox; Redis is the versioned projection consumed by
+Gateways, and only Gateways send device control messages.

@@ -68,7 +68,12 @@ public static class RolloutEndpoints
             db.Releases.Add(release);
             await db.SaveChangesAsync(cancellationToken);
         }
-        var rollout = await planner.CreateAsync(release.Id, ids, cancellationToken);
+        Rollout rollout;
+        try { rollout = await planner.CreateAsync(release.Id, ids, cancellationToken); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return TypedResults.Problem(statusCode: 409, title: "Fleet activity changed or reset is pending; refresh before trying again");
+        }
         var progress = await queries.GetAsync(rollout.Id, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return TypedResults.Accepted($"/api/rollouts/{rollout.Id.Value}", progress!.Summary);

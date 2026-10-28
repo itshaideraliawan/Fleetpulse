@@ -1,5 +1,6 @@
 using FleetPulse.Contracts.DeviceProtocol;
 using FleetPulse.Contracts.Ids;
+using FleetPulse.Contracts.Messaging;
 
 namespace FleetPulse.Simulator;
 
@@ -15,6 +16,30 @@ public sealed class DeviceCommandExecutor(VirtualDevice device, double failureRa
     private readonly LinkedList<CommandId> _order = new();
     private long _executionCount;
     private Task _lastExecution = Task.CompletedTask;
+    private DemoControlSnapshot? _demo;
+
+    public async Task ApplyDemoAsync(DemoControlSnapshot state, CancellationToken cancellationToken)
+    {
+        Task predecessor;
+        TaskCompletionSource completion;
+        lock (_gate)
+        {
+            var previous = _demo;
+            if (previous is not null && state.Revision <= previous.Revision) return;
+            Volatile.Write(ref _demo, state);
+            if (state.ResetGeneration <= (previous?.ResetGeneration ?? 0)) return;
+            predecessor = _lastExecution;
+            completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _lastExecution = completion.Task;
+        }
+        try
+        {
+            await predecessor.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            cancellationToken.ThrowIfCancellationRequested();
+            device.SetFirmwareVersion("1.0.0");
+        }
+        finally { completion.TrySetResult(); }
+    }
 
     public long ExecutionCount => Interlocked.Read(ref _executionCount);
 
@@ -79,6 +104,9 @@ public sealed class DeviceCommandExecutor(VirtualDevice device, double failureRa
         CancellationToken cancellationToken)
     {
         await Task.Delay(TimeSpan.FromMilliseconds(Random.Shared.Next(50, 251)), cancellationToken);
+        var demo = Volatile.Read(ref _demo);
+        if (demo?.ResetAtUtc is { } resetAt && command.Header.SentAtUtc <= resetAt)
+            return Result(command, CommandOutcome.Failed, "Command predates fleet reset.");
         if (command.ExpiresAtUtc <= DateTimeOffset.UtcNow) return Result(command, CommandOutcome.Failed, "Command expired before execution.");
         if (command.Kind == CommandKind.RunDiagnostics)
         {
@@ -94,8 +122,8 @@ public sealed class DeviceCommandExecutor(VirtualDevice device, double failureRa
             return Result(command, CommandOutcome.Failed, "Firmware command requires release, rollout, wave, and a version of at most 40 characters.");
 
         if (command.Kind == CommandKind.InstallFirmware &&
-            string.Equals(command.FirmwareVersion, badReleaseVersion, StringComparison.Ordinal) &&
-            string.Equals(device.Model, badReleaseModel, StringComparison.Ordinal))
+            string.Equals(command.FirmwareVersion, demo is null || demo.Revision == 0 ? badReleaseVersion : demo.BadReleaseVersion, StringComparison.Ordinal) &&
+            string.Equals(device.Model, demo is null || demo.Revision == 0 ? badReleaseModel : demo.BadReleaseModel, StringComparison.Ordinal))
             return Result(command, CommandOutcome.Failed, $"Firmware {command.FirmwareVersion} is incompatible with model {device.Model}.");
 
         device.SetFirmwareVersion(command.FirmwareVersion);

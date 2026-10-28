@@ -1,4 +1,5 @@
 using FleetPulse.Contracts.DeviceProtocol;
+using Microsoft.EntityFrameworkCore;
 
 namespace FleetPulse.FleetApi.Commands;
 
@@ -26,6 +27,7 @@ public static class CommandEndpoints
             .WithSummary("Create a diagnostics command for a device, group, or fleet")
             .Produces<CreateCommandResult>(StatusCodes.Status202Accepted)
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status404NotFound);
         return app;
     }
@@ -54,7 +56,12 @@ public static class CommandEndpoints
         }
 
         var normalized = request with { Model = request.Model?.Trim() };
-        var result = await publisher.CreateAsync(normalized, cancellationToken);
+        CreateCommandResult? result;
+        try { result = await publisher.CreateAsync(normalized, cancellationToken); }
+        catch (DbUpdateConcurrencyException)
+        {
+            return TypedResults.Problem(statusCode: 409, title: "Fleet activity changed or reset is pending; refresh before trying again");
+        }
         return result is null
             ? TypedResults.Problem(statusCode: StatusCodes.Status404NotFound,
                 title: "No devices match the command target")

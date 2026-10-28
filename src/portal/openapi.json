@@ -74,6 +74,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -448,6 +458,74 @@
           }
         }
       }
+    },
+    "/api/demo": {
+      "get": {
+        "tags": [
+          "Demo"
+        ],
+        "operationId": "GetDemoStatus",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Demo"
+        ],
+        "operationId": "ApplyDemoControl",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -759,6 +837,174 @@
           }
         }
       },
+      "DemoAction": {
+        "type": "integer"
+      },
+      "DemoControlSnapshot": {
+        "required": [
+          "revision",
+          "admissionEnabled",
+          "badReleaseVersion",
+          "badReleaseModel",
+          "dropGeneration",
+          "resetGeneration",
+          "resetAtUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "revision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "admissionEnabled": {
+            "type": "boolean"
+          },
+          "badReleaseVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "badReleaseModel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dropGeneration": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "resetGeneration": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "resetAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "DemoRequest": {
+        "required": [
+          "requestId",
+          "expectedRevision",
+          "action",
+          "admissionEnabled",
+          "badReleaseVersion",
+          "badReleaseModel"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "action": {
+            "$ref": "#/components/schemas/DemoAction"
+          },
+          "admissionEnabled": {
+            "type": "boolean"
+          },
+          "badReleaseVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "badReleaseModel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DemoStatus": {
+        "required": [
+          "desired",
+          "appliedRevision",
+          "sampledAtUtc",
+          "dropAtUtc",
+          "recoveryTarget",
+          "connectedDevices",
+          "resetPending",
+          "gateways"
+        ],
+        "type": "object",
+        "properties": {
+          "desired": {
+            "$ref": "#/components/schemas/DemoControlSnapshot"
+          },
+          "appliedRevision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "sampledAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dropAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "recoveryTarget": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "connectedDevices": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "resetPending": {
+            "type": "boolean"
+          },
+          "gateways": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GatewayDemoStatus"
+            }
+          }
+        }
+      },
       "DeviceDetail": {
         "required": [
           "device",
@@ -978,6 +1224,53 @@
             "items": {
               "$ref": "#/components/schemas/RegionSummary"
             }
+          }
+        }
+      },
+      "GatewayDemoStatus": {
+        "required": [
+          "instanceId",
+          "revision",
+          "connectedDevices",
+          "configuredDevices",
+          "observedAtUtc",
+          "admissionEnabled"
+        ],
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "connectedDevices": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "configuredDevices": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "observedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "admissionEnabled": {
+            "type": "boolean"
           }
         }
       },
@@ -1386,6 +1679,9 @@
     },
     {
       "name": "Rollouts"
+    },
+    {
+      "name": "Demo"
     }
   ]
 }

@@ -11,7 +11,7 @@ public sealed partial class GatewayCommandDelivery(
     PendingDeviceCommands pending,
     IHubContext<DeviceHub> hub,
     IClock clock,
-    ILogger<GatewayCommandDelivery> logger) : IDeviceCommandDelivery
+    ILogger<GatewayCommandDelivery> logger, GatewayDemoControl? demo = null) : IDeviceCommandDelivery
 {
     public const string ReceiveMethod = "ReceiveCommand";
 
@@ -28,8 +28,19 @@ public sealed partial class GatewayCommandDelivery(
         }
 
         var connectionId = await presence.GetConnectionIdAsync(deviceId, cancellationToken);
+        if (demo is not null && demo.Current is null)
+        {
+            await pending.SaveAsync(command, cancellationToken);
+            return;
+        }
         if (connectionId is not null)
         {
+            if (demo?.Current is { } settings && !await demo.IsReadyAsync(connectionId, cancellationToken))
+            {
+                await pending.SaveAsync(command, cancellationToken);
+                await hub.Clients.Client(connectionId).SendAsync(GatewayDemoControl.ClientMethod, settings, cancellationToken);
+                return;
+            }
             await SendAsync(command, connectionId, cancellationToken);
             await pending.RemoveAsync(deviceId, command.CommandId, cancellationToken);
             return;
@@ -46,6 +57,12 @@ public sealed partial class GatewayCommandDelivery(
     public async Task DeliverPendingAsync(DeviceId deviceId, string connectionId,
         CancellationToken cancellationToken)
     {
+        if (demo is not null && demo.Current is null) return;
+        if (demo?.Current is { } settings && !await demo.IsReadyAsync(connectionId, cancellationToken))
+        {
+            await hub.Clients.Client(connectionId).SendAsync(GatewayDemoControl.ClientMethod, settings, cancellationToken);
+            return;
+        }
         foreach (var command in await pending.GetAsync(deviceId, cancellationToken))
         {
             if (command.ExpiresAtUtc > clock.UtcNow &&

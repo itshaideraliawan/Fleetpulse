@@ -11,7 +11,9 @@ public sealed partial class DeviceHub(
     IDeviceCommandDelivery commandDelivery,
     ICommandReportSink commandReports,
     DeviceMessageBuffer buffer,
-    ILogger<DeviceHub> logger) : Hub
+    ILogger<DeviceHub> logger,
+    DeviceConnectionRegistry? connections = null,
+    GatewayDemoControl? demo = null) : Hub
 {
     public const string Route = "/hubs/device";
 
@@ -27,14 +29,19 @@ public sealed partial class DeviceHub(
         var deviceId = DeviceId.From(guid);
         await presence.ConnectAsync(deviceId, Context.ConnectionId, Context.ConnectionAborted);
         Context.Items[typeof(DeviceId)] = deviceId;
-        await commandDelivery.DeliverPendingAsync(deviceId, Context.ConnectionId,
-            Context.ConnectionAborted);
+        connections?.Add(Context);
+        if (demo?.Current is { } settings)
+            await Clients.Caller.SendAsync(GatewayDemoControl.ClientMethod, settings, Context.ConnectionAborted);
+        else if (demo is null)
+            await commandDelivery.DeliverPendingAsync(deviceId, Context.ConnectionId, Context.ConnectionAborted);
         LogConnected(logger, deviceId, Context.ConnectionId);
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        connections?.Remove(Context.ConnectionId);
+        if (demo is not null) await demo.DisconnectAsync(Context.ConnectionId, CancellationToken.None);
         if (Context.Items.TryGetValue(typeof(DeviceId), out var value) && value is DeviceId deviceId)
         {
             await presence.DisconnectAsync(deviceId, Context.ConnectionId, CancellationToken.None);
@@ -42,6 +49,28 @@ public sealed partial class DeviceHub(
         }
 
         await base.OnDisconnectedAsync(exception);
+    }
+
+    public async Task SendDemoApplied(JsonElement payload)
+    {
+        if (!TryGetDeviceId(out var deviceId))
+        {
+            DeviceMessageMetrics.RecordDropped("demo_applied", "not_connected");
+            return;
+        }
+        if (!DeviceMessageValidator.TryValidate<DemoControlApplied>(payload, deviceId, out var message, out var reason))
+        {
+            DeviceMessageMetrics.RecordDropped("demo_applied", reason!);
+            return;
+        }
+        if (demo?.Current?.Revision != message!.Revision)
+        {
+            DeviceMessageMetrics.RecordDropped("demo_applied", "revision");
+            return;
+        }
+        await demo.AcknowledgeAsync(Context.ConnectionId, message.Revision, Context.ConnectionAborted);
+        DeviceMessageMetrics.RecordAccepted("demo_applied");
+        await commandDelivery.DeliverPendingAsync(deviceId, Context.ConnectionId, Context.ConnectionAborted);
     }
 
     public void SendHeartbeat(JsonElement payload)
