@@ -20,6 +20,7 @@ public sealed class RedisFleetState(IConnectionMultiplexer redis, IClock clock)
         local counts = KEYS[3]
         local kind = ARGV[2]
         local sent = tonumber(ARGV[3])
+        if sent <= tonumber(redis.call('GET', 'fleetpulse:demo:reset-cutoff') or '-1') then return 0 end
         local previous = tonumber(redis.call('HGET', state, kind) or '-1')
         if sent <= previous then return 0 end
 

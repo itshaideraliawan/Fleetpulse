@@ -1,6 +1,7 @@
 using FleetPulse.Contracts.DeviceProtocol;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
+using FleetPulse.Contracts.Messaging;
 
 namespace FleetPulse.Simulator;
 
@@ -53,6 +54,13 @@ public sealed class SimulatorRunner(SimulatorOptions options)
                     .Build();
                 connection.On<DeviceCommand>("ReceiveCommand", command =>
                     HandleCommandAsync(connection, device, executor, command, cancellationToken));
+                connection.On<DemoControlSnapshot>("DemoControl", async state =>
+                {
+                    await executor.ApplyDemoAsync(state, cancellationToken);
+                    var applied = new DemoControlApplied(new DeviceMessageHeader(DeviceProtocolVersion.Current,
+                        device.Id, DateTimeOffset.UtcNow), state.Revision);
+                    await connection.SendCoreAsync("SendDemoApplied", [applied], cancellationToken);
+                });
 
                 try
                 {

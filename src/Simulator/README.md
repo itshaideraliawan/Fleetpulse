@@ -41,3 +41,17 @@ or out-of-range hints fall back to jitter alone. Other connection failures keep
 the existing backoff behavior. Every new attempt gets a fresh hint, and shutdown
 can cancel the wait. Gateway settings and the live on/off switch are documented
 in [the Gateway guide](../Gateway/README.md).
+
+## Runtime demo controls
+
+Portal Demo Control changes bad-release version/model settings over the Gateway
+device hub. Startup fault flags remain effective until the first shared control
+request; after that, shared settings override them. Apply the portal settings
+before a scenario so the displayed saved values are authoritative.
+
+Reset restores firmware 1.0.0 after previously queued execution finishes and
+rejects commands sent before the reset cutoff. Duplicate or older control
+revisions are ignored. The recent command cache is retained, so old result
+replays cannot execute an install again. Each connection acknowledges the
+configuration before Gateway releases pending commands. Drop/reset closes the
+socket and reuses the existing reconnect/backoff loop.

@@ -13,6 +13,7 @@ public static class FleetMessaging
     public const string CommandQueue = "fleetpulse.deliver-command";
     public const string CommandAckQueue = "fleetpulse.command-acknowledged";
     public const string CommandResultQueue = "fleetpulse.command-completed";
+    public const string DemoQueue = "fleetpulse.demo-control";
 
     public static void Configure(WolverineOptions options)
     {
@@ -22,6 +23,7 @@ public static class FleetMessaging
         options.ListenToRabbitQueue(TelemetryQueue).ProcessInline();
         options.ListenToRabbitQueue(CommandAckQueue).ProcessInline();
         options.ListenToRabbitQueue(CommandResultQueue).ProcessInline();
+        options.ListenToRabbitQueue(DemoQueue).ProcessInline();
     }
 
     public static void ConfigureOutbox(WolverineOptions options, string connectionString)
@@ -30,5 +32,6 @@ public static class FleetMessaging
         options.UseEntityFrameworkCoreTransactions();
         options.Policies.UseDurableOutboxOnAllSendingEndpoints();
         options.PublishMessage<DeliverCommand>().ToRabbitQueue(CommandQueue).UseDurableOutbox();
+        options.PublishMessage<DemoControlChanged>().ToRabbitQueue(DemoQueue).UseDurableOutbox();
     }
 }

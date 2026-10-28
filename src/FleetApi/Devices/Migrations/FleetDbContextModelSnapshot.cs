@@ -106,6 +106,70 @@ namespace FleetApi.Devices.Migrations
                     b.ToTable("CommandTargets");
                 });
 
+            modelBuilder.Entity("FleetPulse.FleetApi.Demo.DemoControlState", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("AdmissionEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BadReleaseModel")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("BadReleaseVersion")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTimeOffset?>("DropAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("DropGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("LastRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RecoveryTarget")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("ResetAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("ResetGeneration")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("ResetPending")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("WorkVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DemoControls");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AdmissionEnabled = true,
+                            DropGeneration = 0L,
+                            LastRequestId = new Guid("00000000-0000-0000-0000-000000000000"),
+                            RecoveryTarget = 0,
+                            ResetGeneration = 0L,
+                            ResetPending = false,
+                            Revision = 0L,
+                            WorkVersion = 0L
+                        });
+                });
+
             modelBuilder.Entity("FleetPulse.FleetApi.Devices.Device", b =>
                 {
                     b.Property<Guid>("Id")

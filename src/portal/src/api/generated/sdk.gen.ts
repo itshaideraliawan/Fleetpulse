@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateCommandData, CreateCommandErrors, CreateCommandResponses, CreateRolloutData, CreateRolloutErrors, CreateRolloutResponses, GetCommandProgressData, GetCommandProgressErrors, GetCommandProgressResponses, GetDeviceData, GetDeviceErrors, GetDeviceResponses, GetFleetSummaryData, GetFleetSummaryResponses, GetRecentCommandsData, GetRecentCommandsResponses, GetRecentRolloutsData, GetRecentRolloutsResponses, GetRolloutProgressData, GetRolloutProgressErrors, GetRolloutProgressResponses, SearchDevicesData, SearchDevicesErrors, SearchDevicesResponses } from './types.gen';
+import type { ApplyDemoControlData, ApplyDemoControlErrors, ApplyDemoControlResponses, CreateCommandData, CreateCommandErrors, CreateCommandResponses, CreateRolloutData, CreateRolloutErrors, CreateRolloutResponses, GetCommandProgressData, GetCommandProgressErrors, GetCommandProgressResponses, GetDemoStatusData, GetDemoStatusResponses, GetDeviceData, GetDeviceErrors, GetDeviceResponses, GetFleetSummaryData, GetFleetSummaryResponses, GetRecentCommandsData, GetRecentCommandsResponses, GetRecentRolloutsData, GetRecentRolloutsResponses, GetRolloutProgressData, GetRolloutProgressErrors, GetRolloutProgressResponses, SearchDevicesData, SearchDevicesErrors, SearchDevicesResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -70,3 +70,14 @@ export const createRollout = <ThrowOnError extends boolean = false>(options: Opt
 });
 
 export const getRolloutProgress = <ThrowOnError extends boolean = false>(options: Options<GetRolloutProgressData, ThrowOnError>): RequestResult<GetRolloutProgressResponses, GetRolloutProgressErrors, ThrowOnError> => (options.client ?? client).get<GetRolloutProgressResponses, GetRolloutProgressErrors, ThrowOnError>({ url: '/api/rollouts/{id}', ...options });
+
+export const getDemoStatus = <ThrowOnError extends boolean = false>(options?: Options<GetDemoStatusData, ThrowOnError>): RequestResult<GetDemoStatusResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetDemoStatusResponses, unknown, ThrowOnError>({ url: '/api/demo', ...options });
+
+export const applyDemoControl = <ThrowOnError extends boolean = false>(options: Options<ApplyDemoControlData, ThrowOnError>): RequestResult<ApplyDemoControlResponses, ApplyDemoControlErrors, ThrowOnError> => (options.client ?? client).post<ApplyDemoControlResponses, ApplyDemoControlErrors, ThrowOnError>({
+    url: '/api/demo',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});

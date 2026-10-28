@@ -20,6 +20,9 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer
 builder.Services.AddSingleton<IDevicePresence, RedisDevicePresence>();
 builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<PendingDeviceCommands>();
+builder.Services.AddSingleton<DeviceConnectionRegistry>();
+builder.Services.AddSingleton<GatewayDemoControl>();
+builder.Services.AddHostedService(provider => provider.GetRequiredService<GatewayDemoControl>());
 builder.Services.AddSingleton<IDeviceCommandDelivery, GatewayCommandDelivery>();
 builder.Services.AddSignalR(options => options.MaximumReceiveMessageSize = DeviceMessageValidator.MaxSignalRMessageBytes)
     .AddStackExchangeRedis(redisConnectionString, options =>

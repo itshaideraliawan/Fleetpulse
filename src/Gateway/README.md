@@ -59,8 +59,17 @@ than successful device sessions. Existing message metrics are unchanged.
    bucket and previously connected clients remain connected. Restore true to
    resume limiting new upgrades, then restore rate/burst to 100/100.
 
-Portal Demo Control and fleet-wide propagation of a switch are D6-02 work.
-This task exposes the per-instance reloadable setting; it adds no public control
-endpoint. Non-simulator clients must honor the 429 hint themselves. Malformed
+The portal Demo Control screen stores the shared admission setting through
+Fleet API's transactional outbox. Each Gateway polls its Redis projection once
+per second and applies the shared setting, overriding the local Enabled flag.
+Rate and burst capacity remain local configuration. Gateway connection counts
+are reported with five-second leases, independently of telemetry offline time.
+Drop/reset requests close only local device sockets on each Gateway; Fleet API
+never contacts devices. Devices acknowledge configuration before receiving
+pending commands. Expired readiness markers trigger a fresh acknowledgement,
+including when delivery originates on another Gateway through the backplane.
+
+Before shared demo settings are available, the local Enabled flag is used.
+Non-simulator clients must honor the 429 hint themselves. Malformed
 attempts that reach the upgrade endpoint can consume tokens; device identity
 authentication remains outside the portfolio scope.
