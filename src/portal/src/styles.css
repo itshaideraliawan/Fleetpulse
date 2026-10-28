@@ -76,3 +76,20 @@ nav { display: grid; gap: 5px; }
 @media (max-width: 1150px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 850px) { .filter-row { flex-wrap: wrap; }.search-field { flex-basis: 100%; }.filter-row label:not(.search-field) { flex: 1; }.region-row { grid-template-columns: 120px 1fr 75px; gap: 10px; } }
 @media (max-width: 650px) { .metric-grid { grid-template-columns: 1fr 1fr; gap: 9px; }.metric-card { min-height: 145px; padding: 17px; }.metric-card strong { font-size: 24px; }.data-panel { padding: 20px 16px; }.region-row { grid-template-columns: 1fr 2fr; }.region-total { display: none; }.region-legend { flex-wrap: wrap; gap: 9px; }.live-badge { display: none; }.pagination { flex-direction: column; align-items: flex-start; }.device-detail { padding: 30px 20px; } }
+.rollout-heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 24px; }
+.rollout-heading h3 { margin: 0; font-size: 16px; }
+.rollout-heading > span:last-child { color: #718878; font-size: 11px; }
+.rollout-reason { color: #536a5b; font-size: 12px; overflow-wrap: anywhere; }
+.rollout-state-0, .rollout-state-1, .rollout-state-2, .rollout-state-5 { background: #fff5df; color: #92691c; }
+.rollout-state-3, .rollout-state-6 { background: #e8f8ed; color: #258b55; }
+.rollout-state-4 { background: #fff0ee; color: #af4d42; }
+.current-wave { background: #f4f9f5; }
+.rollout-waves td:last-child { min-width: 150px; }
+.rollout-rollback { margin-top: 24px; padding: 20px; border: 1px solid #dce9df; border-radius: 8px; background: #f5faf6; }
+.rollout-rollback h3, .rollout-history-title { font-size: 14px; }
+.rollout-rollback p { font-size: 11px; color: #647c6c; }
+.rollout-history-title { margin-top: 28px; }
+.rollout-transitions { padding-left: 22px; font-size: 11px; color: #536a5b; }
+.rollout-transitions li { padding: 10px 0 10px 8px; border-bottom: 1px solid #edf1ec; }
+.rollout-transitions time { display: block; margin-top: 5px; font-size: 10px; color: #718878; }
+.rollout-transitions p { margin-bottom: 0; overflow-wrap: anywhere; }
