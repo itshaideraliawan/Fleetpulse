@@ -41,11 +41,14 @@ public sealed class SimulatorRunner(SimulatorOptions options)
             while (!cancellationToken.IsCancellationRequested)
             {
                 var hubUrl = new Uri($"{options.Gateway.GetLeftPart(UriPartial.Authority)}/hubs/device?deviceId={device.Id}");
+                var retryAfter = TimeSpan.Zero;
                 await using var connection = new HubConnectionBuilder()
                     .WithUrl(hubUrl, transport =>
                     {
                         transport.Transports = HttpTransportType.WebSockets;
                         transport.SkipNegotiation = true;
+                        transport.WebSocketFactory = (context, token) =>
+                            AdmissionRetry.ConnectAsync(context.Uri, delay => retryAfter = delay, token);
                     })
                     .Build();
                 connection.On<DeviceCommand>("ReceiveCommand", command =>
@@ -79,7 +82,7 @@ public sealed class SimulatorRunner(SimulatorOptions options)
                 }
 
                 failureCount++;
-                var delay = FullJitterBackoff.NextDelay(failureCount, Random.Shared.NextDouble());
+                var delay = retryAfter + FullJitterBackoff.NextDelay(failureCount, Random.Shared.NextDouble());
                 await Task.Delay(delay, cancellationToken);
             }
         }

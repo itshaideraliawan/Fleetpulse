@@ -31,3 +31,13 @@ Fault injection applies from process startup, including the canary wave. For the
 100-device cohort numbered 1–100, the canary is Kiosk-A and Kiosk-B failures appear
 in wave 2. Other cohort sizes or target selections can encounter the bad model
 in their first wave. Rollout creation and wave decisions belong to Fleet API.
+
+## Admission retry hints
+
+The WebSocket connector collects rejected HTTP upgrade responses. On HTTP 429,
+positive numeric `Retry-After` values up to one day are honored as a minimum
+wait, followed by the existing full-jitter exponential backoff. Missing, invalid,
+or out-of-range hints fall back to jitter alone. Other connection failures keep
+the existing backoff behavior. Every new attempt gets a fresh hint, and shutdown
+can cancel the wait. Gateway settings and the live on/off switch are documented
+in [the Gateway guide](../Gateway/README.md).

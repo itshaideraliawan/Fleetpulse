@@ -1,11 +1,13 @@
 using FleetPulse.Contracts.Time;
 using FleetPulse.Gateway.Devices;
 using FleetPulse.ServiceDefaults;
+using Microsoft.AspNetCore.Http.Connections;
 using StackExchange.Redis;
 using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
+builder.Services.AddDeviceAdmissionControl(builder.Configuration);
 builder.Services.AddOpenTelemetry().WithMetrics(metrics => metrics.AddMeter(DeviceMessageMetrics.MeterName));
 builder.UseWolverine(GatewayMessaging.Configure);
 builder.Services.AddSingleton<DeviceMessageBuffer>();
@@ -24,6 +26,7 @@ builder.Services.AddSignalR(options => options.MaximumReceiveMessageSize = Devic
     options.Configuration.ChannelPrefix = RedisChannel.Literal("fleetpulse:gateway"));
 
 var app = builder.Build();
+app.UseDeviceAdmissionControl();
 app.MapDefaultEndpoints();
-app.MapHub<DeviceHub>(DeviceHub.Route);
+app.MapHub<DeviceHub>(DeviceHub.Route, options => options.Transports = HttpTransportType.WebSockets);
 app.Run();
