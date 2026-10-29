@@ -18,7 +18,7 @@ and one bad software release can take down the whole fleet.
 ## What it does
 
 - Connects 5,000 simulated devices over WebSockets (ASP.NET Core SignalR)
-- Shows live fleet status and health in an operator portal, updated within 2 seconds
+- Shows live fleet status and health through a batched operator feed
 - Sends commands to one device, a group or the fleet: delivered at least once, executed once
 - Rolls out software in waves (1% → 10% → 50% → 100%) with a health gate and automatic rollback
 - Survives reconnect storms with admission control and jittered backoff
@@ -32,21 +32,31 @@ outbox) and Redis. See [`docs/architecture.md`](docs/architecture.md) and the de
 ## Results (measured locally)
 
 Machine: Intel Core i5-10210U (4 cores / 8 threads), 15.8 GiB RAM, Windows 11 Pro.
-Capacity spike (2026-10-26): 5,000 devices in one simulator process; also checked as two processes of 2,500.
+Measured 2026-10-28: .NET 10.0.13 Release services, one simulator process, Docker 29.9.2 with 7.64 GiB RAM,
+SQL Server limited to 2 GiB. Admission enabled uses 200 permits/s and burst 200; disabled runs second.
 
-| Target | Value | Result |
+| Target | Admission enabled | Admission disabled |
 | --- | --- | --- |
-| Concurrent devices | 5,000 for 15 minutes, no unexpected disconnects | Reached 5,000/5,000 by ~25 s; stayed full through a 5m 14s run with 0 reported failures. 15-minute target pending |
-| Dashboard freshness | status change visible within 2 s | _pending_ |
-| Command fan-out | 99% of 5,000 acknowledged within 10 s | _pending_ |
-| Reconnect storm | 5,000 back online within 60 s (with vs. without admission control) | _pending_ |
-| Rollout safety | bad release halted at wave 2, 100% rolled back | _pending_ |
+| 5,000 devices for 15 min, no unexpected disconnects | **Pass:** 905.00 s, 0 closures/failures | **Pass:** 900.47 s, 0 closures/failures |
+| Dashboard freshness within 2 s (operator-feed proxy) | **Miss:** p99 1.76 s, max 2.38 s | Feed p99 1.30 s, max 1.58 s; browser not measured |
+| 99% of 5,000 ACKs within 10 s | **Pass:** 5,000/5,000 (100%); p99 9.16 s | **Miss:** 3,800/5,000 (76%); p99 13.13 s |
+| 5,000 recovered within 60 s | **Pass:** 51.65 s | **Pass:** 13.90 s |
+| Halt bad release at wave 2; restore every updated device | **Pass:** wave 2; 357/357 restored | **Pass:** wave 2; 368/368 restored |
 
-In the D2-05 capacity spike, one simulator process reached 1,000, 2,500, and 5,000 connected devices with
-heartbeats and telemetry continuing at each level. Its working set was about 114 MiB, 201 MiB, and 324 MiB,
-respectively. Two 2,500-device processes also reached 5,000 combined connections with 0 reported failures;
-their working sets were about 197 MiB and 190 MiB. Gateway `/health` returned 200 at 5,000 connections.
-The configured fleet stops at 5,000, so this establishes a lower bound for machine capacity, not a failure limit.
+Both holds kept simulator and Gateway at 5,000 connections with heartbeats and telemetry continuing.
+All 5,000 diagnostics commands eventually succeeded in each mode. ACKs are actual client send completions,
+not inferred SQL receipt timestamps. Commands run after each 15-minute hold, without a command warmup.
+Bad-release injection starts after the canary's recorded gate; rollback counts cover devices actually updated.
+
+Freshness measures device timestamp to operator SignalR receipt, **not React paint time**. Reconnect-window
+feed p99 was 8.17 s enabled and 5.99 s disabled, so steady-state freshness must not be assumed during storms.
+The strict freshness target remains missed with admission, and command fan-out remains missed without it.
+
+These sequential observations share one laptop with three existing Aspire containers; they do not establish
+a causal admission advantage or a production capacity limit. Admission-off recovered faster on this host.
+The probe excludes the Aspire dashboard, OTLP export, and a browser, and uses warning-level service logs.
+See [method, pilot fixes, and limitations](docs/measurements/D6-03-scale-run.md),
+[recorded results](docs/measurements/D6-03-scale-results.json), and the [reproduction tool](tools/ScaleProbe/README.md).
 
 ## Run it locally
 

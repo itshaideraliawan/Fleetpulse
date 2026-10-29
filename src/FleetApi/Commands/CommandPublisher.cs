@@ -56,6 +56,7 @@ public sealed class CommandPublisher(IDbContextOutbox<FleetDbContext> outbox, IC
         db.Commands.Add(command);
         foreach (var batch in deviceIds.Chunk(BatchSize))
         {
+            var deliveries = new List<DeviceCommand>(batch.Length);
             foreach (var targetDeviceId in batch)
             {
                 var targetId = CommandId.New();
@@ -70,9 +71,10 @@ public sealed class CommandPublisher(IDbContextOutbox<FleetDbContext> outbox, IC
                 var message = new DeviceCommand(
                     new DeviceMessageHeader(DeviceProtocolVersion.Current, targetDeviceId, now),
                     targetId, request.Kind, expires, null, null, null, null);
-                await outbox.PublishAsync(new DeliverCommand(message));
+                deliveries.Add(message);
             }
 
+            await outbox.PublishAsync(new DeliverCommandBatch(deliveries));
             await DemoControlState.TouchWorkAsync(db, cancellationToken);
             await outbox.SaveChangesAndFlushMessagesAsync(MultiFlushMode.AllowMultiples,
                 cancellationToken);

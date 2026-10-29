@@ -90,6 +90,7 @@ public sealed class CommandPublishingTests
         await using var connection = await factory.CreateConnectionAsync(timeout.Token);
         await using var channel = await connection.CreateChannelAsync(cancellationToken: timeout.Token);
         var received = new HashSet<Guid>();
+        var envelopeSizes = new List<int>();
         while (received.Count < deviceIds.Length)
         {
             var delivery = await channel.BasicGetAsync(FleetMessaging.CommandQueue,
@@ -101,13 +102,17 @@ public sealed class CommandPublishingTests
             }
 
             using var document = JsonDocument.Parse(delivery.Body);
-            var command = document.RootElement.GetProperty("command");
-            Assert.Equal((int)CommandKind.RunDiagnostics,
-                command.GetProperty("kind").GetInt32());
-            received.Add(command.GetProperty("commandId").GetGuid());
+            var commands = document.RootElement.GetProperty("commands");
+            envelopeSizes.Add(commands.GetArrayLength());
+            foreach (var command in commands.EnumerateArray())
+            {
+                Assert.Equal((int)CommandKind.RunDiagnostics, command.GetProperty("kind").GetInt32());
+                received.Add(command.GetProperty("commandId").GetGuid());
+            }
         }
 
         Assert.Equal(deviceIds.Length, received.Count);
+        Assert.Equal([5, CommandPublisher.BatchSize, CommandPublisher.BatchSize], envelopeSizes.Order());
         await host.StopAsync(timeout.Token);
     }
 }

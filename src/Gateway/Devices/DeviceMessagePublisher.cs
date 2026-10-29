@@ -9,7 +9,7 @@ public sealed partial class DeviceMessagePublisher(
     ILogger<DeviceMessagePublisher> logger) : BackgroundService
 {
     public const int MaxBatchSize = 250;
-    private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan FlushInterval = TimeSpan.FromMilliseconds(250);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

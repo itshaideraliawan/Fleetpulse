@@ -26,6 +26,6 @@ public static class GatewayMessaging
         options.PublishMessage<DeviceTelemetryBatch>().ToRabbitQueue(TelemetryQueue).SendInline();
         options.PublishMessage<CommandAcknowledged>().ToRabbitQueue(CommandAckQueue).SendInline();
         options.PublishMessage<CommandCompleted>().ToRabbitQueue(CommandResultQueue).SendInline();
-        options.ListenToRabbitQueue(CommandQueue).ProcessInline();
+        options.ListenToRabbitQueue(CommandQueue).ProcessInline().ListenerCount(8);
     }
 }

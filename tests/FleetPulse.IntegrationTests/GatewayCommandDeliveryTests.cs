@@ -49,18 +49,26 @@ public sealed class GatewayCommandDeliveryTests
             options.UseRabbitMqUsingNamedConnection("rabbitmq").AutoProvision();
             options.PublishMessage<DeliverCommand>()
                 .ToRabbitQueue(GatewayMessaging.CommandQueue).SendInline();
+            options.PublishMessage<DeliverCommandBatch>()
+                .ToRabbitQueue(GatewayMessaging.CommandQueue).SendInline();
         });
         using var publisher = publisherBuilder.Build();
         await publisher.StartAsync(timeout.Token);
 
         var deviceId = DeviceId.New();
         var live = CreateCommand(deviceId, DateTimeOffset.UtcNow.AddMinutes(5));
+        var secondLive = CreateCommand(DeviceId.New(), DateTimeOffset.UtcNow.AddMinutes(5));
         await using (var connection = CreateConnection(receiverPort, deviceId, out var liveReceived))
+        await using (var secondConnection = CreateConnection(receiverPort, secondLive.Header.DeviceId,
+                         out var secondReceived))
         {
             await connection.StartAsync(timeout.Token);
+            await secondConnection.StartAsync(timeout.Token);
             await publisher.Services.GetRequiredService<IMessageBus>()
-                .PublishAsync(new DeliverCommand(live));
+                .PublishAsync(new DeliverCommandBatch([live, secondLive]));
             Assert.Equal(live.CommandId, (await liveReceived.Task.WaitAsync(timeout.Token)).CommandId);
+            Assert.Equal(secondLive.CommandId, (await secondReceived.Task.WaitAsync(timeout.Token)).CommandId);
+            await secondConnection.StopAsync(timeout.Token);
             await connection.StopAsync(timeout.Token);
         }
 

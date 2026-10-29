@@ -1,0 +1,197 @@
+﻿{
+    "modes":  [
+                  {
+                      "targets":  {
+                                      "operatorFeedWithin2Seconds":  false,
+                                      "wave2AndCompleteRollback":  true,
+                                      "command99PercentWithin10Seconds":  true,
+                                      "reconnectWithin60Seconds":  true,
+                                      "stability":  true
+                                  },
+                      "stormFreshnessMilliseconds":  {
+                                                         "maximum":  12166.2396,
+                                                         "p50":  866.5575,
+                                                         "p95":  5962.2017,
+                                                         "count":  23015,
+                                                         "p99":  8171.4213,
+                                                         "negativeSamples":  0
+                                                     },
+                      "installed":  357,
+                      "ackWithin10Seconds":  5000,
+                      "startupSeconds":  45.1638739,
+                      "simulatorFirmwareInstalled":  357,
+                      "haltReason":  "Wave 2: 143/450 updates failed or expired; required failure rate \u003c 2%",
+                      "heartbeatDelta":  299066,
+                      "commandPostSeconds":  5.7255962,
+                      "recoverySeconds":  51.6525022,
+                      "observedHoldSeconds":  904.9999544,
+                      "recoveredSessions":  5000,
+                      "holdSampleCount":  179,
+                      "injectionRequestedSeconds":  6.4950232,
+                      "acknowledgementBasis":  "Client ACK send completion minus server command creation; persisted receipt is reported separately",
+                      "admission":  true,
+                      "minimumGatewaySessions":  5000,
+                      "failingWave":  2,
+                      "ackMilliseconds":  {
+                                              "maximum":  9213.4932,
+                                              "p50":  7640.3866,
+                                              "p95":  9034.2798,
+                                              "count":  5000,
+                                              "p99":  9164.8234,
+                                              "negativeSamples":  0
+                                          },
+                      "minimumSimulatorSessions":  5000,
+                      "rolloutSeconds":  30.9285614,
+                      "telemetryDelta":  448658,
+                      "rolloutStatus":  6,
+                      "restored":  357,
+                      "steadyFreshnessMilliseconds":  {
+                                                          "maximum":  2375.8594,
+                                                          "p50":  776.0317,
+                                                          "p95":  1385.332,
+                                                          "count":  701177,
+                                                          "p99":  1756.9754,
+                                                          "negativeSamples":  0
+                                                      },
+                      "persistedReceiptMilliseconds":  {
+                                                           "maximum":  36997.3467,
+                                                           "p50":  22191.6776,
+                                                           "p95":  35785.7711,
+                                                           "count":  5000,
+                                                           "p99":  36690.11,
+                                                           "negativeSamples":  0
+                                                       },
+                      "devices":  5000,
+                      "missingAcknowledgements":  0,
+                      "command":  {
+                                      "id":  "219739e0-9da5-49b0-8a7f-c9c84d34bfd5",
+                                      "kind":  0,
+                                      "createdAtUtc":  "2026-10-28T09:21:44.1730679+00:00",
+                                      "expiresAtUtc":  "2026-10-28T09:26:44.1730679+00:00",
+                                      "total":  5000,
+                                      "pending":  0,
+                                      "acknowledged":  0,
+                                      "succeeded":  5000,
+                                      "failed":  0,
+                                      "expired":  0
+                                  },
+                      "simulatorFirmwareRolledBack":  357,
+                      "requestedHoldSeconds":  900,
+                      "error":  null,
+                      "holdConnectionFailures":  0,
+                      "unexpectedSessionClosures":  0,
+                      "peakProbeWorkingSetBytes":  386441216
+                  },
+                  {
+                      "targets":  {
+                                      "operatorFeedWithin2Seconds":  true,
+                                      "wave2AndCompleteRollback":  true,
+                                      "command99PercentWithin10Seconds":  false,
+                                      "reconnectWithin60Seconds":  true,
+                                      "stability":  true
+                                  },
+                      "stormFreshnessMilliseconds":  {
+                                                         "maximum":  9470.6953,
+                                                         "p50":  2289.2528,
+                                                         "p95":  3887.3826,
+                                                         "count":  3338,
+                                                         "p99":  5992.6953,
+                                                         "negativeSamples":  0
+                                                     },
+                      "installed":  368,
+                      "ackWithin10Seconds":  3800,
+                      "startupSeconds":  60.0430116,
+                      "simulatorFirmwareInstalled":  368,
+                      "haltReason":  "Wave 2: 132/450 updates failed or expired; required failure rate \u003c 2%",
+                      "heartbeatDelta":  298103,
+                      "commandPostSeconds":  13.0462204,
+                      "recoverySeconds":  13.8970862,
+                      "observedHoldSeconds":  900.4719938,
+                      "recoveredSessions":  5000,
+                      "holdSampleCount":  179,
+                      "injectionRequestedSeconds":  7.9853108,
+                      "acknowledgementBasis":  "Client ACK send completion minus server command creation; persisted receipt is reported separately",
+                      "admission":  false,
+                      "minimumGatewaySessions":  5000,
+                      "failingWave":  2,
+                      "ackMilliseconds":  {
+                                              "maximum":  13200.7923,
+                                              "p50":  6790.3797,
+                                              "p95":  12420.53,
+                                              "count":  5000,
+                                              "p99":  13125.0633,
+                                              "negativeSamples":  0
+                                          },
+                      "minimumSimulatorSessions":  5000,
+                      "rolloutSeconds":  46.7288532,
+                      "telemetryDelta":  447820,
+                      "rolloutStatus":  6,
+                      "restored":  368,
+                      "steadyFreshnessMilliseconds":  {
+                                                          "maximum":  1582.9353,
+                                                          "p50":  701.3252,
+                                                          "p95":  1191.9085,
+                                                          "count":  637749,
+                                                          "p99":  1298.6964,
+                                                          "negativeSamples":  0
+                                                      },
+                      "persistedReceiptMilliseconds":  {
+                                                           "maximum":  33480.9321,
+                                                           "p50":  18366.2577,
+                                                           "p95":  31957.1676,
+                                                           "count":  5000,
+                                                           "p99":  33197.7494,
+                                                           "negativeSamples":  0
+                                                       },
+                      "devices":  5000,
+                      "missingAcknowledgements":  0,
+                      "command":  {
+                                      "id":  "352be62d-b280-43dc-a6bc-c98567ecbe9c",
+                                      "kind":  0,
+                                      "createdAtUtc":  "2026-10-28T09:40:23.3605935+00:00",
+                                      "expiresAtUtc":  "2026-10-28T09:45:23.3605935+00:00",
+                                      "total":  5000,
+                                      "pending":  0,
+                                      "acknowledged":  0,
+                                      "succeeded":  5000,
+                                      "failed":  0,
+                                      "expired":  0
+                                  },
+                      "simulatorFirmwareRolledBack":  368,
+                      "requestedHoldSeconds":  900,
+                      "error":  null,
+                      "holdConnectionFailures":  0,
+                      "unexpectedSessionClosures":  0,
+                      "peakProbeWorkingSetBytes":  531820544
+                  }
+              ],
+    "definitions":  "tools/ScaleProbe/README.md; nearest-rank quantiles; feed delivery is not browser paint",
+    "environment":  {
+                        "cpu":  "Intel(R) Core(TM) i5-10210U CPU @ 1.60GHz",
+                        "hostMemoryBytes":  16928935936,
+                        "os":  "Microsoft Windows 11 Pro",
+                        "docker":  "29.9.2",
+                        "dockerMemoryBytes":  "8203730944",
+                        "baseCommit":  "822c7d641115c15a5a02fe5bd305b8915505da99",
+                        "devices":  5000,
+                        "holdSeconds":  900,
+                        "permitsPerSecond":  200,
+                        "burstCapacity":  200,
+                        "sqlMemoryLimitMb":  2048,
+                        "isolation":  "Disposable SQL, Redis, RabbitMQ; Release services; no Aspire dashboard/OTLP/React browser",
+                        "images":  [
+                                       "mcr.microsoft.com/mssql/server:2022-latest",
+                                       "redis:8.6",
+                                       "rabbitmq:4.3"
+                                   ],
+                        "imageIds":  [
+                                         "sha256:cf8f0ab2ebe61feec2eed2629061a07d247f791c2a8ddda74a4ac9f06a291718",
+                                         "sha256:e6dae84f7db289dde3384fdb18d182556784e5a681df3a3f54d1289952364ce8",
+                                         "sha256:e0de43dbe7267e01284ea7d1b6fd8d1f92471dd9db7536c40ad7e9afb5284f6f"
+                                     ]
+                    },
+    "rawResultsSha256":  "4D100D965F50F3A48980C24E780133A3E45F95920C4F1244F07427B5B2E73DF0",
+    "processorCount":  8,
+    "runtime":  ".NET 10.0.13",
+    "measuredAtUtc":  "2026-10-28T09:42:10.401852+00:00"
+}
