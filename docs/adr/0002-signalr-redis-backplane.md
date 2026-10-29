@@ -5,16 +5,18 @@
 
 ## Context
 
-Real fleets often use MQTT (e.g. Azure IoT Hub). This project's goal is to show .NET real-time engineering, and managed SignalR is priced per ~1,000 connections, which is costly at fleet scale.
+The project needs real, long-lived client connections so the demo can show presence, reconnects and command delivery. Devices may connect to different Gateway instances, so a local in-memory connection map would not be enough when a command or operator update is routed through another instance. Managed SignalR, MQTT and IoT platforms are reasonable production choices, but this project is specifically demonstrating the connection mechanics.
 
 ## Decision
 
-Devices connect to an ASP.NET Core SignalR hub in the Gateway. A Redis backplane lets any gateway instance reach any device; presence (device -> connection) is stored in Redis.
+Devices connect to an ASP.NET Core SignalR hub at `/hubs/device`, with the Gateway restricting that hub to WebSockets. Redis stores the current device-to-connection mapping and provides the SignalR backplane. Disconnect cleanup uses a compare-and-delete script so an old connection cannot remove a newer connection's presence record.
 
 ## Consequences
 
-We own connection handling, limits and reconnect behaviour, which is the point of the demo. MQTT / Azure IoT Hub and Azure SignalR Service are named in the README as production alternatives.
+The project owns connection limits, validation, reconnect behaviour and observability. Redis becomes part of the device path and must be available before the Gateway starts. The design can fan out across Gateway instances locally, while MQTT, Azure IoT Hub and Azure SignalR Service remain production alternatives rather than hidden assumptions.
 
 ## Alternatives considered
 
-MQTT broker; Azure IoT Hub; Azure SignalR Service; raw WebSockets.
+- MQTT or Azure IoT Hub: stronger device-oriented protocols and managed operations, but outside this .NET SignalR demonstration.
+- Azure SignalR Service: removes backplane operations, but hides the connection handling the project is intended to exercise.
+- Raw WebSockets: less framework overhead, but would require reimplementing hub negotiation, dispatch and lifecycle plumbing.

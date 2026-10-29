@@ -5,16 +5,18 @@
 
 ## Context
 
-A bad software release can break the whole fleet. Rollouts must stop themselves and explain why.
+Firmware changes are risky because a release can be incompatible with one hardware model while appearing healthy on another. Sending a release to the whole fleet at once makes the failure expensive and leaves no clear point at which to stop. Operators also need a recorded explanation for a halt and rollback.
 
 ## Decision
 
-A rollout is a state machine (Draft, WaveRunning, GateCheck, Completed, Halted, RollingBack, RolledBack) stored in SQL with a reason for every transition. Waves: 1% / 10% / 50% / 100%. After each wave a health gate checks update failure rate (< 2%); a failure halts the rollout and sends a rollback to every updated device.
+Store rollout status and transition history in SQL. The state machine moves through `Draft`, `WaveRunning`, `GateCheck`, `Completed`, `Halted`, `RollingBack` and `RolledBack`, and every transition stores a bounded reason and timestamp. The planner creates cumulative 1%, 10%, 50% and 100% milestones, rounding up small cohorts so a canary exists. After each wave reaches terminal target outcomes, the health gate passes only when failures and expirations are strictly below 2%. A failed gate halts the rollout and queues rollback commands for every device confirmed to have installed the release; uncertain installs remain unresolved until a definitive result arrives.
 
 ## Consequences
 
-More code than a loop, but every decision is recorded and testable. Pause/resume and restart recovery are deferred to the full plan.
+The flow is more explicit than a single loop, but it is testable, queryable and safe to resume through the hosted worker's next scan. Rollback is itself command delivery and therefore follows the command ID and outbox rules. Pause/resume, restart recovery guarantees and operator authorization are outside the seven-day version.
 
 ## Alternatives considered
 
-Single 'update everything' command.
+- One “update everything” command: simpler, but it cannot limit blast radius or identify the failing wave.
+- A timer-only workflow: easy to start, but it would lose the reason and current state across restarts.
+- Automatic rollback of every planned target: safer-looking, but it would send rollback work to devices that never installed the release; this implementation waits for confirmed updates.

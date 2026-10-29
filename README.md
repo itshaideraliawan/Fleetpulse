@@ -19,7 +19,7 @@ and one bad software release can take down the whole fleet.
 
 - Connects 5,000 simulated devices over WebSockets (ASP.NET Core SignalR)
 - Shows live fleet status and health through a batched operator feed
-- Sends commands to one device, a group or the fleet: delivered at least once, executed once
+- Sends commands to one device, a group or the fleet: delivered at least once, with duplicate IDs suppressed by the device cache
 - Rolls out software in waves (1% → 10% → 50% → 100%) with a health gate and automatic rollback
 - Survives reconnect storms with admission control and jittered backoff
 
@@ -52,7 +52,7 @@ RabbitMQ containers and supplies their connection strings to the services. A pro
 | Separate Gateway and Fleet API ([ADR 0001](docs/adr/0001-separate-gateway-from-fleet-api.md)) | A reconnect storm cannot consume the control plane's SQL and operator capacity. |
 | SignalR with Redis presence and backplane ([ADR 0002](docs/adr/0002-signalr-redis-backplane.md)) | The demo exercises real WebSocket connection handling while leaving room for multiple Gateway instances. |
 | Wolverine, RabbitMQ and a SQL outbox ([ADR 0003](docs/adr/0003-wolverine-rabbitmq-outbox.md)) | A command or event is not lost between a database write and its broker publication. |
-| Command IDs with retry and de-duplication ([ADR 0004](docs/adr/0004-at-least-once-commands.md)) | Unreliable links can deliver a message more than once without executing the command more than once. |
+| Command IDs with retry and bounded de-duplication ([ADR 0004](docs/adr/0004-at-least-once-commands.md)) | Unreliable links can deliver a message more than once without repeating the effect while its ID remains cached. |
 | Rollout state machine with health gates ([ADR 0005](docs/adr/0005-rollout-state-machine.md)) | A bad release halts at a recorded wave and rolls back devices that were actually updated. |
 | Jittered reconnects and token-bucket admission ([ADR 0006](docs/adr/0006-reconnect-storm-control.md)) | Recovery is paced and observable instead of turning a simultaneous reconnect into a retry spiral. |
 

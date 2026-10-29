@@ -5,16 +5,17 @@
 
 ## Context
 
-Devices hold long-lived WebSocket connections and reconnect in bursts after outages. Operators need the dashboard and commands to stay responsive exactly then.
+The device side is connection-heavy: every kiosk keeps a WebSocket open, sends heartbeats and telemetry, and may reconnect at the same time after an outage. The operator side needs predictable REST, command and rollout latency during that burst. A single process would make those workloads compete for the same resources and deployment unit.
 
 ## Decision
 
-Run a thin Device Gateway (connections, presence, message relay) separately from the Fleet API (REST, operator hub, commands, rollouts, background workers). They communicate only through RabbitMQ and Redis. The gateway never touches SQL.
+Run two web services with a narrow ownership boundary. The Device Gateway owns the SignalR device hub, connection admission, Redis presence and device message relay. The Fleet API owns REST, the operator hub, SQL-backed device and rollout state, and the hosted workers for telemetry, retries and rollouts. The Gateway receives only Redis and RabbitMQ references; it has no SQL connection. The services exchange device events and commands through RabbitMQ and use Redis for shared connection state and SignalR fan-out.
 
 ## Consequences
 
-Two services instead of one and an extra hop for commands. In return, a reconnect storm can't starve operator traffic, and each side scales on its own driver.
+There is an extra service and a broker hop for commands. The boundary lets connection load and control-plane work scale independently, makes the no-SQL device connect path explicit, and keeps the public demo aligned with the production split. Workers remain in the Fleet API for this version, so a separate worker service is still a future option.
 
 ## Alternatives considered
 
-One service for everything; a separate Workers service (deferred: workers run as hosted services inside the Fleet API for now).
+- One service for everything: simpler deployment, but a reconnect storm could compete directly with operator traffic and SQL work.
+- A separate Workers service: useful at larger scale, but unnecessary while the Fleet API hosts the bounded background loops.
