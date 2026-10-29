@@ -32,6 +32,8 @@ public sealed class SimulatorReconnectTests
             await using var secondGateway = CreateGateway(port, out var secondBuffer);
             await secondGateway.StartAsync(timeout.Token);
             await AssertMessagesAsync(secondBuffer, timeout.Token);
+            Assert.True(simulator.GetSnapshot().OpenedSessions >= 2);
+            Assert.True(simulator.GetSnapshot().ClosedSessions >= 1);
             await secondGateway.StopAsync(timeout.Token);
         }
         finally

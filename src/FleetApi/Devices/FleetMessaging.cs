@@ -21,9 +21,9 @@ public static class FleetMessaging
         options.UseRabbitMqUsingNamedConnection("rabbitmq").AutoProvision();
         options.ListenToRabbitQueue(HeartbeatQueue).ProcessInline();
         options.ListenToRabbitQueue(TelemetryQueue).ProcessInline();
-        options.ListenToRabbitQueue(CommandAckQueue).ProcessInline();
-        options.ListenToRabbitQueue(CommandResultQueue).ProcessInline();
-        options.ListenToRabbitQueue(DemoQueue).ProcessInline();
+        options.ListenToRabbitQueue(CommandAckQueue).ProcessInline().ListenerCount(8);
+        options.ListenToRabbitQueue(CommandResultQueue).ProcessInline().ListenerCount(8);
+        options.ListenToRabbitQueue(DemoQueue);
     }
 
     public static void ConfigureOutbox(WolverineOptions options, string connectionString)
@@ -32,6 +32,7 @@ public static class FleetMessaging
         options.UseEntityFrameworkCoreTransactions();
         options.Policies.UseDurableOutboxOnAllSendingEndpoints();
         options.PublishMessage<DeliverCommand>().ToRabbitQueue(CommandQueue).UseDurableOutbox();
+        options.PublishMessage<DeliverCommandBatch>().ToRabbitQueue(CommandQueue).UseDurableOutbox();
         options.PublishMessage<DemoControlChanged>().ToRabbitQueue(DemoQueue).UseDurableOutbox();
     }
 }

@@ -68,7 +68,8 @@ public sealed partial class GatewayDemoControl(IConnectionMultiplexer redis, Dev
                     connections.AbortAll();
             }
             else if (connections.Configured(next.Revision) < connections.Count)
-                await hub.Clients.Clients(connections.ConnectionIds).SendAsync(ClientMethod, next, cancellationToken);
+                await hub.Clients.Clients(connections.UnconfiguredConnectionIds(next.Revision))
+                    .SendAsync(ClientMethod, next, cancellationToken);
         }
         var current = Current;
         var now = clock.UtcNow;

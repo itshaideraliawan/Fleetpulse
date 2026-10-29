@@ -11,4 +11,7 @@
     <Project Path="tests/FleetPulse.UnitTests/FleetPulse.UnitTests.csproj" />
     <Project Path="tests/FleetPulse.IntegrationTests/FleetPulse.IntegrationTests.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/ScaleProbe/ScaleProbe.csproj" />
+  </Folder>
 </Solution>

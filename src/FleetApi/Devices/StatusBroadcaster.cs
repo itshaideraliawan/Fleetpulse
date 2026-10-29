@@ -15,9 +15,10 @@ public sealed partial class StatusBroadcaster(
     private const string PushGateKey = "fleet:status:last-push-at";
     private const int MaxChangesPerPush = 5_000;
     public static readonly TimeSpan PushInterval = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);
 
     private static readonly RedisValue[] StatusFields = ["online", "health", "lastSeenAt",
-        "cpuPercent", "memoryPercent", "temperatureCelsius"];
+        "cpuPercent", "memoryPercent", "temperatureCelsius", "healthSentAt"];
 
     private const string AcquirePushGateScript = """
         local previous = redis.call('GET', KEYS[1])
@@ -30,7 +31,8 @@ public sealed partial class StatusBroadcaster(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(PushInterval);
+        // Retry a just-missed gate promptly; timer jitter must not turn a one-second gate into two seconds.
+        using var timer = new PeriodicTimer(PollInterval);
         try
         {
             while (await timer.WaitForNextTickAsync(stoppingToken))
@@ -115,7 +117,9 @@ public sealed partial class StatusBroadcaster(
             ? DateTimeOffset.FromUnixTimeMilliseconds(milliseconds) : (DateTimeOffset?)null;
         return new DeviceStatusChange(deviceId, values[0] == "1",
             values[1].IsNull ? null : values[1].ToString(), lastSeenAt,
-            ParseDouble(values[3]), ParseDouble(values[4]), ParseDouble(values[5]));
+            ParseDouble(values[3]), ParseDouble(values[4]), ParseDouble(values[5]),
+            long.TryParse(values[6].ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var sent)
+                ? DateTimeOffset.FromUnixTimeMilliseconds(sent) : null);
     }
 
     private static int ParseInt(RedisValue value) =>
@@ -137,4 +141,4 @@ public sealed record OperatorStatusBatch(DateTimeOffset SentAtUtc, int OnlineDev
 
 public sealed record DeviceStatusChange(DeviceId DeviceId, bool Online, string? Health,
     DateTimeOffset? LastSeenAt, double? CpuPercent, double? MemoryPercent,
-    double? TemperatureCelsius);
+    double? TemperatureCelsius, DateTimeOffset? LastMessageSentAt = null);

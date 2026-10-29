@@ -8,6 +8,9 @@ public sealed class DeviceConnectionRegistry
     private readonly ConcurrentDictionary<string, Connection> _connections = new();
     public int Count => _connections.Count;
     public string[] ConnectionIds => _connections.Keys.ToArray();
+    public string[] UnconfiguredConnectionIds(long revision) => _connections.Values
+        .Where(connection => Interlocked.Read(ref connection.Revision) != revision)
+        .Select(connection => connection.Context.ConnectionId).ToArray();
     public void Add(HubCallerContext context) => _connections[context.ConnectionId] = new Connection(context);
     public void Remove(string id) => _connections.TryRemove(id, out _);
     public void Acknowledge(string id, long revision)

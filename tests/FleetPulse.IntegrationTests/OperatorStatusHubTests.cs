@@ -64,6 +64,7 @@ public sealed class OperatorStatusHubTests
         Assert.Single(first.Changes);
         Assert.Equal(deviceId, first.Changes[0].DeviceId);
         Assert.Equal("degraded", first.Changes[0].Health);
+        Assert.Equal(clock.UtcNow, first.Changes[0].LastMessageSentAt);
         Assert.Equal(2, first.MessagesSinceLastPush);
         Assert.Equal(2, first.MessagesPerSecond);
 
@@ -78,6 +79,7 @@ public sealed class OperatorStatusHubTests
         var second = await received.Reader.ReadAsync(timeout.Token);
         Assert.Single(second.Changes);
         Assert.Equal("healthy", second.Changes[0].Health);
+        Assert.Equal(clock.UtcNow.AddMilliseconds(-500), second.Changes[0].LastMessageSentAt);
         Assert.Equal(1, second.MessagesSinceLastPush);
         Assert.False(received.Reader.TryRead(out _));
 

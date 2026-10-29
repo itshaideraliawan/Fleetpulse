@@ -5,7 +5,7 @@ using FleetPulse.Contracts.Messaging;
 
 namespace FleetPulse.Simulator;
 
-public sealed class SimulatorRunner(SimulatorOptions options)
+public sealed class SimulatorRunner(SimulatorOptions options, Action<CommandAck>? acknowledgementSent = null)
 {
     private long _connected;
     private long _heartbeats;
@@ -16,6 +16,15 @@ public sealed class SimulatorRunner(SimulatorOptions options)
     private long _commandsFailed;
     private long _firmwareInstalled;
     private long _firmwareRolledBack;
+    private long _openedSessions;
+    private long _closedSessions;
+
+    public SimulatorSnapshot GetSnapshot() => new(Interlocked.Read(ref _connected),
+        Interlocked.Read(ref _openedSessions), Interlocked.Read(ref _closedSessions),
+        Interlocked.Read(ref _failedConnections), Interlocked.Read(ref _heartbeats),
+        Interlocked.Read(ref _telemetry), Interlocked.Read(ref _commandsExecuted),
+        Interlocked.Read(ref _commandsReplayed), Interlocked.Read(ref _firmwareInstalled),
+        Interlocked.Read(ref _firmwareRolledBack));
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
@@ -52,6 +61,13 @@ public sealed class SimulatorRunner(SimulatorOptions options)
                             AdmissionRetry.ConnectAsync(context.Uri, delay => retryAfter = delay, token);
                     })
                     .Build();
+                var opened = 0;
+                connection.Closed += _ =>
+                {
+                    if (!cancellationToken.IsCancellationRequested && Volatile.Read(ref opened) == 1)
+                        Interlocked.Increment(ref _closedSessions);
+                    return Task.CompletedTask;
+                };
                 connection.On<DeviceCommand>("ReceiveCommand", command =>
                     HandleCommandAsync(connection, device, executor, command, cancellationToken));
                 connection.On<DemoControlSnapshot>("DemoControl", async state =>
@@ -65,7 +81,9 @@ public sealed class SimulatorRunner(SimulatorOptions options)
                 try
                 {
                     await connection.StartAsync(cancellationToken);
+                    Volatile.Write(ref opened, 1);
                     Interlocked.Increment(ref _connected);
+                    Interlocked.Increment(ref _openedSessions);
                     failureCount = 0;
                     try
                     {
@@ -116,6 +134,7 @@ public sealed class SimulatorRunner(SimulatorOptions options)
                 new DeviceMessageHeader(DeviceProtocolVersion.Current, device.Id, DateTimeOffset.UtcNow),
                 command.CommandId);
             await connection.SendCoreAsync("SendCommandAck", [ack], cancellationToken);
+            acknowledgementSent?.Invoke(ack);
             var execution = await executor.ExecuteAsync(command, cancellationToken);
             if (execution.Replayed)
             {
@@ -199,3 +218,7 @@ public sealed class SimulatorRunner(SimulatorOptions options)
         }
     }
 }
+
+public sealed record SimulatorSnapshot(long Connected, long OpenedSessions, long ClosedSessions,
+    long ConnectionFailures, long Heartbeats, long Telemetry, long CommandsExecuted,
+    long CommandsReplayed, long FirmwareInstalled, long FirmwareRolledBack);
