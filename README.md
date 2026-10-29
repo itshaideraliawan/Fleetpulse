@@ -6,7 +6,7 @@ A control center for a fleet of 5,000 simulated self-service kiosks: live presen
 device or the whole fleet, and staged software rollouts that stop and roll back on their own when health drops.
 Built to show how to design systems whose clients are machines that retry, go offline and reconnect all at once.
 
-> Status: in progress. See [`docs/execution-plan.md`](docs/execution-plan.md).
+> Status: local 5,000-device rehearsal complete; the final walkthrough video is still to be recorded. See [`docs/execution-plan.md`](docs/execution-plan.md).
 > Walkthrough video: _coming on Day 7_
 
 ## The problem
@@ -27,7 +27,37 @@ and one bad software release can take down the whole fleet.
 
 The **Device Gateway** holds device connections only and never touches SQL. The **Fleet API** is the control plane
 (REST, operator hub, commands, rollouts, background workers). They talk through RabbitMQ (Wolverine, transactional
-outbox) and Redis. See [`docs/architecture.md`](docs/architecture.md) and the decisions in [`docs/adr`](docs/adr/README.md).
+outbox) and Redis. The portal talks to the Fleet API; only the Gateway talks to devices.
+
+```mermaid
+flowchart LR
+    S[Device Simulator<br/>5,000 virtual kiosks] -->|SignalR / WebSockets| G[Device Gateway]
+    G <--> R[(Redis<br/>presence + backplane)]
+    G <--> Q[(RabbitMQ)]
+    Q <--> F[Fleet API<br/>REST + operator hub + workers]
+    F <--> R
+    F -->|EF Core + transactional outbox| D[(SQL Server)]
+    P[React portal] <--> F
+```
+
+The SQL boundary is deliberate: the Gateway handles connection admission, presence and device message relay, while
+the Fleet API owns durable state and publishes through the outbox. Aspire wires the local SQL Server, Redis and
+RabbitMQ containers and supplies their connection strings to the services. A prose version of this diagram is in
+[`docs/architecture.md`](docs/architecture.md).
+
+## Key decisions
+
+| Decision | Why it matters here |
+| --- | --- |
+| Separate Gateway and Fleet API ([ADR 0001](docs/adr/0001-separate-gateway-from-fleet-api.md)) | A reconnect storm cannot consume the control plane's SQL and operator capacity. |
+| SignalR with Redis presence and backplane ([ADR 0002](docs/adr/0002-signalr-redis-backplane.md)) | The demo exercises real WebSocket connection handling while leaving room for multiple Gateway instances. |
+| Wolverine, RabbitMQ and a SQL outbox ([ADR 0003](docs/adr/0003-wolverine-rabbitmq-outbox.md)) | A command or event is not lost between a database write and its broker publication. |
+| Command IDs with retry and de-duplication ([ADR 0004](docs/adr/0004-at-least-once-commands.md)) | Unreliable links can deliver a message more than once without executing the command more than once. |
+| Rollout state machine with health gates ([ADR 0005](docs/adr/0005-rollout-state-machine.md)) | A bad release halts at a recorded wave and rolls back devices that were actually updated. |
+| Jittered reconnects and token-bucket admission ([ADR 0006](docs/adr/0006-reconnect-storm-control.md)) | Recovery is paced and observable instead of turning a simultaneous reconnect into a retry spiral. |
+
+These choices are intentionally visible in the three-minute demo: connect a large fleet, run a command, fail a staged
+release, then drop and recover all connections while the portal shows the live state.
 
 ## Results (measured locally)
 
