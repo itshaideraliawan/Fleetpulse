@@ -66,7 +66,23 @@ Prerequisites: .NET 10 SDK, Docker, Node.js LTS.
 dotnet run --project src/AppHost
 ```
 
-Aspire starts SQL Server, Redis, RabbitMQ, the gateway, the Fleet API, the portal and the simulator, and opens its dashboard.
+Aspire starts SQL Server, Redis, RabbitMQ, the Gateway, Fleet API, and the simulator, and opens its dashboard.
+Fleet API is exposed at `http://localhost:5000`. Start the portal in a second Windows PowerShell terminal:
+
+```powershell
+cd src/portal
+npm.cmd ci
+npm.cmd run dev
+```
+
+The Windows `npm.cmd` shim avoids PowerShell execution-policy errors from `npm.ps1`.
+On other systems, use `npm` instead.
+
+Open the Vite URL. For the 5,000-device rehearsal, use
+`dotnet run --project src/AppHost -- --Simulator:Devices=5000` and follow
+[`docs/demo-script.md`](docs/demo-script.md). AppHost defaults to 1,000 devices.
+SQL credentials persist in local user-secrets. Existing SQL volumes require their
+original password; see the [portal/demo setup guide](src/portal/README.md#persistent-sql-credentials).
 
 ## Roadmap (what production would add)
 

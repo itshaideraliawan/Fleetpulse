@@ -1,13 +1,15 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var fleetDb = builder.AddSqlServer("sqlserver")
-    .WithDataVolume()
+    .WithDataVolume(builder.Configuration["SqlServer:DataVolumeName"])
     .AddDatabase("fleetdb");
 
 var redis = builder.AddRedis("redis");
 var rabbitMq = builder.AddRabbitMQ("rabbitmq");
 
 builder.AddProject<Projects.FleetApi>("fleet-api")
+    .WithHttpEndpoint(port: 5000)
+    .WithHttpHealthCheck("/health")
     .WithReference(fleetDb)
     .WithReference(redis)
     .WithReference(rabbitMq)
@@ -17,6 +19,7 @@ builder.AddProject<Projects.FleetApi>("fleet-api")
 
 var gateway = builder.AddProject<Projects.Gateway>("gateway")
     .WithHttpEndpoint()
+    .WithHttpHealthCheck("/health")
     .WithReference(redis)
     .WithReference(rabbitMq)
     .WaitFor(redis)
