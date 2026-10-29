@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AspireUseCliBundle>true</AspireUseCliBundle>
+    <UserSecretsId>fleetpulse-apphost-7949e39f-06e7-47c1-9b52-309c0e35a4d3</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.SqlServer" />

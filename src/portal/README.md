@@ -1,19 +1,49 @@
 # FleetPulse portal
 
 The portal uses Fleet API for REST and the operator SignalR hub. Start Aspire
-with `dotnet run --project src/AppHost`, then copy the Fleet API HTTP URL from
-the Aspire dashboard. In a second PowerShell window:
+with `dotnet run --project src/AppHost`. Fleet API is exposed at
+`http://localhost:5000`, matching the portal proxy default. In a second PowerShell window:
 
 ```powershell
 cd src/portal
-$env:FLEET_API_URL = 'http://localhost:<Fleet API port>'
-npm install
-npm run dev
+npm.cmd ci
+npm.cmd run dev
 ```
 
 Open the Vite URL. The dev server proxies `/api` and `/hubs` to Fleet API so
-the browser uses one origin. If Aspire assigns a new Fleet API port, update
-`FLEET_API_URL` and restart Vite.
+the browser uses one origin. Set `FLEET_API_URL` before starting Vite only when
+using a separately hosted Fleet API at another address.
+
+On Windows, `npm.cmd` avoids PowerShell's script-policy block on `npm.ps1`.
+On other systems, use `npm` instead.
+
+## Persistent SQL credentials
+
+AppHost has a stable user-secrets identity so generated development passwords
+survive restarts alongside the SQL data volume. Password values are not committed.
+A volume created before this identity was configured may require its original
+`sa` password. Save that existing password locally without placing it in a command
+argument or printing it:
+
+```powershell
+$sqlPassword = Read-Host 'Existing SQL sa password' -AsSecureString
+@{ 'Parameters:sqlserver-password' = [Net.NetworkCredential]::new('', $sqlPassword).Password } |
+    ConvertTo-Json -Compress | dotnet user-secrets set --project src/AppHost
+Remove-Variable sqlPassword
+```
+
+Run these commands from the repository root. This reuses the existing login;
+it does not change SQL credentials or delete data. If the original password is
+unknown, use a separate named rehearsal volume and leave the original intact:
+
+```powershell
+dotnet run --project src/AppHost -- --Simulator:Devices=5000 --SqlServer:DataVolumeName=fleetpulse-rehearsal
+```
+
+Keep the same volume name and local secret on later starts to reuse that rehearsal
+database. Port 5000 must be available for the Fleet API endpoint.
+When switching between volumes initialized with different passwords, set the
+local SQL password parameter to the credential for the selected volume.
 
 The REST SDK in `src/api/generated` comes from `openapi.json`, which is a
 snapshot of Fleet API's `/openapi/v1.json`. After API contract changes, replace
